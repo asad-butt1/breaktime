@@ -42,3 +42,9 @@ Every time code is pushed to GitHub, GitHub builds the app automatically.
 
 Built with Kotlin and Jetpack Compose. Minimum Android 8.0 (API 26), targets Android 15 (API 35).
 To build locally: install Android Studio, open this folder, and press Run.
+
+## Publishing to Google Play
+
+- **Signed release (.aab):** the `release` job in `.github/workflows/build.yml` builds `BreakTime-release-aab` when these repository secrets are set: `BT_KEYSTORE_BASE64`, `BT_KEYSTORE_PASSWORD`, `BT_KEY_ALIAS`, `BT_KEY_PASSWORD`.
+- **Privacy policy:** [PRIVACY.md](PRIVACY.md) (also `docs/privacy-policy.html` for GitHub Pages).
+- **Store images:** `node store/make_store_images.js <screenshots-dir> <out-dir>` turns the Paparazzi store shots (`StoreShotsTest`, published to the `screenshots` branch under `store/`) into framed 1080×1920 phone screenshots, the 1024×500 feature graphic and the 512 px icon.
