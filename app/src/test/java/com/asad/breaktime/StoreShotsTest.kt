@@ -2,6 +2,11 @@ package com.asad.breaktime
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.requiredHeight
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
@@ -57,10 +62,15 @@ private class FullResHandler(private val dir: File) : SnapshotHandler {
  * Play Store screenshots with realistic, brand-free sample data.
  * Output: PNGs in app/build/store-shots at 1080 x 2340.
  */
+private const val TILE = 542
+private const val TILES = 4
+
 class StoreShotsTest {
     @get:Rule
     val paparazzi = Paparazzi(
-        deviceConfig = DeviceConfig.PIXEL_5,
+        // Paparazzi shrinks any image bigger than 1000px, so each screen is rendered as
+        // 4 horizontal strips of 1000 x $TILE px and stitched together afterwards.
+        deviceConfig = DeviceConfig.PIXEL_5.copy(screenWidth = 1000, screenHeight = TILE),
         showSystemUi = false,
         snapshotHandler = FullResHandler(File("build/store-shots")),
     )
@@ -68,8 +78,22 @@ class StoreShotsTest {
     private val now = 1_762_700_000_000L
     private val endsAt = now + 24 * 60_000L + 18_000L
 
-    private fun shot(name: String, content: @Composable () -> Unit) = paparazzi.snapshot(name) {
-        BreakTimeTheme { Box(Modifier.fillMaxSize().background(Palette.Parchment)) { content() } }
+    private fun shot(name: String, content: @Composable () -> Unit) {
+        for (k in 0 until TILES) {
+            paparazzi.snapshot("${name}__$k") {
+                val d = LocalDensity.current
+                val tileDp = with(d) { TILE.toDp() }
+                BreakTimeTheme {
+                    Box(
+                        Modifier
+                            .wrapContentHeight(align = Alignment.Top, unbounded = true)
+                            .requiredHeight(tileDp * TILES)
+                            .offset(y = -tileDp * k)
+                            .background(Palette.Parchment)
+                    ) { content() }
+                }
+            }
+        }
     }
 
     @Composable
