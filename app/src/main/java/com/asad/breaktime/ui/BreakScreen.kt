@@ -32,6 +32,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.KeyboardArrowRight
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.LocalFireDepartment
@@ -45,8 +46,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.SwitchDefaults
-import androidx.compose.material3.Switch
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -87,6 +86,7 @@ fun BreakScreen(
     onPickApps: () -> Unit,
     onSetup: () -> Unit,
     onPremium: () -> Unit,
+    onSchedules: () -> Unit = {},
 ) {
     val context = LocalContext.current
     val store = remember { BreakStore.get(context) }
@@ -108,6 +108,14 @@ fun BreakScreen(
     val streak = remember(version) { store.currentStreak() }
     val premium = remember(version) { store.isPremium }
     val strict = remember(version) { store.strictMode }
+    val scheduleSummary = remember(version) {
+        val on = store.schedules.filter { it.enabled }
+        when (on.size) {
+            0 -> null
+            1 -> describeSchedule(on.first())
+            else -> "${on.size} schedules on"
+        }
+    }
 
     if (active) {
         var confirm by remember { mutableStateOf(false) }
@@ -148,6 +156,8 @@ fun BreakScreen(
             isPremium = premium,
             strict = strict,
             onStrictChange = { store.strictMode = it },
+            scheduleSummary = scheduleSummary,
+            onSchedules = onSchedules,
             onStart = {
                 val start = {
                     BreakScheduler.startBreak(context, minutes)
@@ -200,6 +210,8 @@ fun HomeContent(
     isPremium: Boolean = false,
     strict: Boolean = false,
     onStrictChange: (Boolean) -> Unit = {},
+    scheduleSummary: String? = null,
+    onSchedules: () -> Unit = {},
 ) {
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
         BrandHeader {
@@ -274,6 +286,17 @@ fun HomeContent(
                 strict = strict,
                 isPremium = isPremium,
                 onChange = { if (isPremium) onStrictChange(it) else onPremium() },
+            )
+            Spacer(Modifier.height(10.dp))
+            SettingLinkRow(
+                title = "Scheduled breaks",
+                subtitle = when {
+                    !isPremium -> "Premium: lock apps automatically every day"
+                    scheduleSummary != null -> scheduleSummary
+                    else -> "Lock apps automatically at set times"
+                },
+                isPremium = isPremium,
+                onClick = if (isPremium) onSchedules else onPremium,
             )
             Spacer(Modifier.height(20.dp))
         }
@@ -586,16 +609,31 @@ private fun StrictModeRow(strict: Boolean, isPremium: Boolean, onChange: (Boolea
                 color = Palette.Muted,
             )
         }
-        Switch(
-            checked = isPremium && strict,
-            onCheckedChange = { onChange(it) },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = Palette.Card,
-                checkedTrackColor = Palette.Forest,
-                uncheckedThumbColor = Palette.SageDeep,
-                uncheckedTrackColor = Palette.Card,
-                uncheckedBorderColor = Palette.SageDeep,
-            ),
-        )
+        BrandSwitch(isPremium && strict) { onChange(it) }
+    }
+}
+
+/** Tappable settings row with a chevron, matching [StrictModeRow]. */
+@Composable
+private fun SettingLinkRow(title: String, subtitle: String, isPremium: Boolean, onClick: () -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .hairline()
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(title, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
+                if (!isPremium) {
+                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.Rounded.AutoAwesome, null, tint = Palette.Forest, modifier = Modifier.size(13.dp))
+                }
+            }
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
+        }
+        Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = Palette.Muted)
     }
 }

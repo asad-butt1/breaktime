@@ -22,6 +22,8 @@ class BlockerService : AccessibilityService() {
 
         BreakScheduler.finishIfDue(this)
         val store = BreakStore.get(this)
+        // Alarms can be a few minutes late on a sleeping phone, so also catch a scheduled break here.
+        if (!store.isBreakActive() && pkg in store.lockedApps) BreakScheduler.syncSchedules(this)
         if (store.isBreakActive() && pkg in store.lockedApps) {
             startActivity(
                 Intent(this, BlockActivity::class.java)

@@ -131,6 +131,7 @@ fun BreakCompleteContent(minutes: Int, streak: Int, onAnother: () -> Unit, onDon
 
 private val PREMIUM_BENEFITS = listOf(
     "Unlimited locked apps",
+    "Scheduled breaks, e.g. every evening",
     "Strict mode: breaks can't be ended early",
     "No ads",
     "Support a small independent app",
@@ -143,6 +144,7 @@ fun PremiumContent(
     onRestore: () -> Unit,
     prices: PremiumPrices? = null,
     isPremium: Boolean = false,
+    onPrivacyChoices: (() -> Unit)? = null,
 ) {
     var yearly by remember { mutableStateOf(true) }
     Column(
@@ -216,6 +218,11 @@ fun PremiumContent(
         }
         TextButton(onClick = onRestore, modifier = Modifier.fillMaxWidth()) {
             Text("Restore purchase", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
+        }
+        if (onPrivacyChoices != null) {
+            TextButton(onClick = onPrivacyChoices, modifier = Modifier.fillMaxWidth()) {
+                Text("Ad privacy choices", style = MaterialTheme.typography.labelMedium, color = Palette.Muted)
+            }
         }
         Spacer(Modifier.height(4.dp))
     }

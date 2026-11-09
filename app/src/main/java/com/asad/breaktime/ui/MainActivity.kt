@@ -21,11 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import com.asad.breaktime.data.Ads
 import com.asad.breaktime.data.Billing
 import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.service.BreakScheduler
 
-private enum class Overlay { None, Setup, Premium }
+private enum class Overlay { None, Setup, Premium, Schedules }
 
 class MainActivity : ComponentActivity() {
 
@@ -35,6 +36,7 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.light(Palette.Parchment.toArgb(), Palette.DeepPine.toArgb()),
             navigationBarStyle = SystemBarStyle.light(Palette.Parchment.toArgb(), Palette.DeepPine.toArgb()),
         )
+        Ads.init(this)
         setContent {
             BreakTimeTheme {
                 val store = remember { BreakStore.get(this) }
@@ -55,6 +57,7 @@ class MainActivity : ComponentActivity() {
         super.onResume()
         BreakScheduler.finishIfDue(this)
         Billing.refresh(this)
+        BreakScheduler.syncSchedules(this)
     }
 }
 
@@ -96,6 +99,7 @@ private fun MainApp(store: BreakStore) {
                 onConsent = setup.consent,
             )
         }
+        overlay == Overlay.Schedules -> SchedulesScreen(onBack = { overlay = Overlay.None })
         overlay == Overlay.Premium -> {
             val prices by Billing.prices.collectAsState()
             val premium = remember(version) { store.isPremium }
@@ -120,6 +124,9 @@ private fun MainApp(store: BreakStore) {
                 },
                 prices = prices,
                 isPremium = premium,
+                onPrivacyChoices = context.findActivity()
+                    ?.takeIf { !premium && Ads.privacyOptionsRequired(it) }
+                    ?.let { a -> { Ads.showPrivacyOptions(a) } },
             )
         }
         else -> Scaffold(
@@ -136,6 +143,7 @@ private fun MainApp(store: BreakStore) {
                     onPickApps = { tab = Tab.Apps },
                     onSetup = { overlay = Overlay.Setup },
                     onPremium = { overlay = Overlay.Premium },
+                    onSchedules = { overlay = Overlay.Schedules },
                 )
                 Tab.Apps -> AppsScreen(
                     modifier,

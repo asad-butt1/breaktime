@@ -55,8 +55,44 @@ object BreakScheduler {
         }
     }
 
-    /** After a phone restart, put the alarm back. */
+    /**
+     * Starts a scheduled break if one should be running now, and sets an alarm for the next one.
+     * Safe to call any time (app opened, phone restarted, alarm fired, schedules edited).
+     */
+    fun syncSchedules(context: Context) {
+        val store = BreakStore.get(context)
+        val now = System.currentTimeMillis()
+        finishIfDue(context)
+        val schedules = if (store.isPremium) store.schedules else emptyList()
+        if (!store.isBreakActive(now)) {
+            val window = schedules.mapNotNull { it.windowAt(now) }.maxByOrNull { it.end }
+            // Each run starts only once, so ending a (non-strict) scheduled break early isn't undone.
+            if (window != null && window.key != store.lastAutoStart && window.end - now > 60_000L) {
+                store.lastAutoStart = window.key
+                store.startBreakUntil(window.end, now)
+                scheduleEndAlarm(context, store.breakEndsAt)
+                showOngoing(context, store.breakEndsAt, "Scheduled break started")
+            }
+        }
+        val am = context.getSystemService(AlarmManager::class.java) ?: return
+        val next = schedules.mapNotNull { it.nextWindow(now) }.minByOrNull { it.start }
+        if (next != null) {
+            am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, next.start, scheduleIntent(context))
+        } else {
+            am.cancel(scheduleIntent(context))
+        }
+    }
+
+    private fun scheduleIntent(context: Context): PendingIntent =
+        PendingIntent.getBroadcast(
+            context, 1,
+            Intent(context, ScheduleReceiver::class.java),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+
+    /** After a phone restart, put the alarms back. */
     fun restore(context: Context) {
+        syncSchedules(context)
         val store = BreakStore.get(context)
         if (store.isBreakActive()) {
             scheduleEndAlarm(context, store.breakEndsAt)
@@ -91,12 +127,12 @@ object BreakScheduler {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         )
 
-    private fun showOngoing(context: Context, endsAt: Long) {
+    private fun showOngoing(context: Context, endsAt: Long, title: String = "On a break") {
         notify(
             context, NOTIF_ONGOING,
             Notification.Builder(context, CHANNEL_TIMER)
                 .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle("On a break")
+                .setContentTitle(title)
                 .setContentText("Your apps are locked. Go enjoy some time offline.")
                 .setWhen(endsAt)
                 .setShowWhen(true)

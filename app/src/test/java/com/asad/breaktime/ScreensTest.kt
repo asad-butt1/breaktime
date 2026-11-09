@@ -29,6 +29,9 @@ import com.asad.breaktime.ui.LockedAppContent
 import com.asad.breaktime.ui.Palette
 import com.asad.breaktime.ui.PremiumContent
 import com.asad.breaktime.data.PremiumPrices
+import com.asad.breaktime.data.Schedule
+import com.asad.breaktime.ui.ScheduleListContent
+import com.asad.breaktime.ui.ScheduleEditContent
 import com.asad.breaktime.ui.ProgressContent
 import com.asad.breaktime.ui.SetupPage
 import com.asad.breaktime.ui.Tab
@@ -145,6 +148,31 @@ class ScreensTest {
             val now = System.currentTimeMillis()
             val endsAt = now + 23 * 60_000L
             BreakActiveContent(endsAt, 0.62f, endsAt - now, "Go for a 10-minute walk. No phone needed.", {}, m, strict = true)
+        }
+    }
+
+    @Test fun s13_schedules() = shot("13_schedules") {
+        ScheduleListContent(
+            listOf(
+                Schedule(1, 21 * 60, 23 * 60, Schedule.EVERY_DAY),
+                Schedule(2, 9 * 60, 12 * 60 + 30, Schedule.WEEKDAYS, enabled = false),
+            ),
+            {}, {}, {}, { _, _ -> },
+        )
+    }
+
+    @Test fun s13b_schedules_empty() = shot("13b_schedules_empty") { ScheduleListContent(emptyList(), {}, {}, {}, { _, _ -> }) }
+
+    @Test fun s13c_schedule_edit() = shot("13c_schedule_edit") {
+        ScheduleEditContent(Schedule(1, 22 * 60, 7 * 60, setOf(1, 2, 3, 4, 7)), isNew = false, {}, {}, {})
+    }
+
+    @Test fun s04d_home_premium_schedule() = shot("04d_home_premium_schedule") {
+        Tabs(Tab.Break) { m ->
+            HomeContent(
+                "Good evening", 5, 60, {}, {}, 6, true, {}, {}, {}, {}, m,
+                isPremium = true, strict = false, scheduleSummary = "9:00 PM – 11:00 PM · Every day",
+            )
         }
     }
 }

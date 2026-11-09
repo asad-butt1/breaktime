@@ -21,6 +21,10 @@
         android:theme="@style/Theme.BreakTime"
         tools:targetApi="35">
 
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="${admobAppId}" />
+
         <activity
             android:name=".ui.MainActivity"
             android:exported="true">
@@ -54,6 +58,10 @@
 
         <receiver
             android:name=".service.BreakEndReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".service.ScheduleReceiver"
             android:exported="false" />
 
         <receiver

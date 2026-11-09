@@ -77,6 +77,22 @@ class BreakStore private constructor(context: Context) {
     /** True when the current break was started in strict mode. */
     val breakIsStrict: Boolean get() = prefs.getBoolean(KEY_BREAK_STRICT, false)
 
+    // ---- Scheduled breaks (Premium) ----
+
+    var schedules: List<Schedule>
+        get() = Schedule.listFromJson(prefs.getString(KEY_SCHEDULES, null))
+        set(value) {
+            prefs.edit().putString(KEY_SCHEDULES, Schedule.listToJson(value)).apply()
+            changed()
+        }
+
+    /** "scheduleId@windowStart" of the last scheduled break started, so one window starts only once. */
+    var lastAutoStart: String?
+        get() = prefs.getString(KEY_LAST_AUTO, null)
+        set(value) {
+            prefs.edit().putString(KEY_LAST_AUTO, value).apply()
+        }
+
     // ---- Locked apps ----
 
     var lockedApps: Set<String>
@@ -97,10 +113,15 @@ class BreakStore private constructor(context: Context) {
         return end > 0L && now < end
     }
 
-    fun startBreak(minutes: Int, now: Long = System.currentTimeMillis()) {
+    fun startBreak(minutes: Int, now: Long = System.currentTimeMillis()) =
+        startBreakUntil(now + minutes * 60_000L, now)
+
+    /** Starts a break that ends at [endsAt] (used by scheduled breaks). */
+    fun startBreakUntil(endsAt: Long, now: Long = System.currentTimeMillis()) {
+        val minutes = ((endsAt - now + 59_999L) / 60_000L).toInt().coerceAtLeast(1)
         prefs.edit()
             .putLong(KEY_START, now)
-            .putLong(KEY_END, now + minutes * 60_000L)
+            .putLong(KEY_END, endsAt)
             .putInt(KEY_MINUTES, minutes)
             .putBoolean(KEY_BREAK_STRICT, isPremium && strictMode)
             .apply()
@@ -198,6 +219,8 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_CONSENT = "accessibility_consent"
         private const val KEY_CELEBRATE = "celebrate_minutes"
         private const val KEY_PREMIUM = "premium"
+        private const val KEY_SCHEDULES = "schedules"
+        private const val KEY_LAST_AUTO = "last_auto_start"
         private const val KEY_STRICT = "strict_mode"
         private const val KEY_BREAK_STRICT = "break_strict"
 
