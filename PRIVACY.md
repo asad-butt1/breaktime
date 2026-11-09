@@ -1,7 +1,7 @@
 # BreakTime Privacy Policy
-_Last updated: 9 November 2026_
+_Last updated: 9 November 2026 (version 0.8: ads and Premium)_
 
-> **In short:** BreakTime works entirely on your phone. We don't collect, store, sell or share any personal data. Nothing you do in BreakTime is sent to us or anyone else.
+> **In short:** BreakTime works on your phone. We don't run any servers and don't collect your personal data. The free version shows one ad when you start a break; that ad is provided by Google AdMob, which uses a device advertising ID. Premium has no ads.
 
 ## Who we are
 BreakTime is an Android app that helps you take breaks from distracting apps. It is developed by Asad (“we”, “us”).
@@ -16,10 +16,18 @@ BreakTime is an Android app that helps you take breaks from distracting apps. It
 BreakTime saves the apps you chose to lock, your current break and your break history (dates, lengths and whether each break was completed) so it can show your streak and progress. This information is stored only on your phone. Uninstalling the app or clearing its data deletes it.
 
 ## Data we collect
-None. BreakTime has no account, no analytics and no servers. We do not collect, sell or share personal or sensitive data.
+We (the developer) collect nothing. BreakTime has no account, no analytics and no servers of its own. Your locked apps, schedules and break history never leave your phone.
 
-## Advertising and purchases
-Future versions may show an ad when you start a break (free plan only) and offer an optional Premium subscription through Google Play. If ads are added, they will be provided by Google AdMob, which may collect device identifiers as described in [Google's advertising policy](https://policies.google.com/technologies/ads); this policy will be updated before that happens. Payments are handled entirely by Google Play.
+## Advertising (free version)
+The free version shows one full-screen ad after you tap "Start break". Ads are never shown on the break screen. Ads are provided by **Google AdMob**. To show and measure ads, the Google Mobile Ads SDK collects and shares with Google:
+- your device's advertising ID (you can reset or delete it in Android settings → Privacy → Ads),
+- your approximate location derived from your IP address,
+- app interaction and diagnostic data about the ads (for example, whether an ad loaded or was tapped).
+
+This data is sent encrypted. In the EEA, UK and Switzerland you're asked for consent first, and you can change your choice at any time from **Premium → Ad privacy choices**. Learn more in [how Google uses information from apps that use its services](https://policies.google.com/technologies/partner-sites). Premium removes ads completely.
+
+## Purchases
+BreakTime Premium is an optional subscription sold through Google Play. Payments are handled entirely by Google; we never see your card or payment details. The app only receives confirmation from Google Play that your subscription is active.
 
 ## Children
 BreakTime is not directed at children under 13 and does not knowingly collect data from anyone.
