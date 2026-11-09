@@ -52,6 +52,31 @@ class BreakStore private constructor(context: Context) {
             changed()
         }
 
+    // ---- Premium ----
+
+    /** Cached from Google Play Billing (refreshed every time the app opens). */
+    var isPremium: Boolean
+        get() = prefs.getBoolean(KEY_PREMIUM, false)
+        set(value) {
+            if (value == isPremium) return
+            prefs.edit().putBoolean(KEY_PREMIUM, value).apply()
+            changed()
+        }
+
+    /** How many apps the user may lock. */
+    val appLimit: Int get() = if (isPremium) Int.MAX_VALUE else FREE_APP_LIMIT
+
+    /** Premium setting: breaks can't be ended early. */
+    var strictMode: Boolean
+        get() = prefs.getBoolean(KEY_STRICT, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_STRICT, value).apply()
+            changed()
+        }
+
+    /** True when the current break was started in strict mode. */
+    val breakIsStrict: Boolean get() = prefs.getBoolean(KEY_BREAK_STRICT, false)
+
     // ---- Locked apps ----
 
     var lockedApps: Set<String>
@@ -77,6 +102,7 @@ class BreakStore private constructor(context: Context) {
             .putLong(KEY_START, now)
             .putLong(KEY_END, now + minutes * 60_000L)
             .putInt(KEY_MINUTES, minutes)
+            .putBoolean(KEY_BREAK_STRICT, isPremium && strictMode)
             .apply()
         changed()
     }
@@ -99,13 +125,13 @@ class BreakStore private constructor(context: Context) {
     /** User gave up before the timer ended. */
     @Synchronized
     fun endEarly() {
-        if (breakEndsAt == 0L) return
+        if (breakEndsAt == 0L || breakIsStrict) return
         addRecord(BreakRecord(breakStartedAt, breakMinutes, completed = false))
         clearBreak()
     }
 
     private fun clearBreak() {
-        prefs.edit().remove(KEY_END).remove(KEY_START).remove(KEY_MINUTES).apply()
+        prefs.edit().remove(KEY_END).remove(KEY_START).remove(KEY_MINUTES).remove(KEY_BREAK_STRICT).apply()
         changed()
     }
 
@@ -171,8 +197,11 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_ONBOARDED = "onboarding_done"
         private const val KEY_CONSENT = "accessibility_consent"
         private const val KEY_CELEBRATE = "celebrate_minutes"
+        private const val KEY_PREMIUM = "premium"
+        private const val KEY_STRICT = "strict_mode"
+        private const val KEY_BREAK_STRICT = "break_strict"
 
-        /** Free plan limit. Premium (coming later) will remove it. */
+        /** Free plan limit. Premium removes it. */
         const val FREE_APP_LIMIT = 3
 
         @Volatile

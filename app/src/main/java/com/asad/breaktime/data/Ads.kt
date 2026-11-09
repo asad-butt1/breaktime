@@ -9,6 +9,10 @@ import android.app.Activity
  */
 object Ads {
     fun showBreakStartAd(activity: Activity, onDone: () -> Unit) {
+        if (BreakStore.get(activity).isPremium) {
+            onDone() // Premium: no ads.
+            return
+        }
         onDone()
     }
 }

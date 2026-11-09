@@ -41,6 +41,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.asad.breaktime.data.PremiumPrices
 
 // ---------------------------------------------------------------- Break complete
 
@@ -130,14 +131,19 @@ fun BreakCompleteContent(minutes: Int, streak: Int, onAnother: () -> Unit, onDon
 
 private val PREMIUM_BENEFITS = listOf(
     "Unlimited locked apps",
-    "Scheduled daily breaks",
-    "Strict mode that can't end early",
-    "Detailed stats",
+    "Strict mode: breaks can't be ended early",
     "No ads",
+    "Support a small independent app",
 )
 
 @Composable
-fun PremiumContent(onClose: () -> Unit, onStartTrial: (yearly: Boolean) -> Unit, onRestore: () -> Unit) {
+fun PremiumContent(
+    onClose: () -> Unit,
+    onStartTrial: (yearly: Boolean) -> Unit,
+    onRestore: () -> Unit,
+    prices: PremiumPrices? = null,
+    isPremium: Boolean = false,
+) {
     var yearly by remember { mutableStateOf(true) }
     Column(
         Modifier
@@ -187,12 +193,27 @@ fun PremiumContent(onClose: () -> Unit, onStartTrial: (yearly: Boolean) -> Unit,
                 }
             }
             Spacer(Modifier.height(20.dp))
-            PlanOption("Yearly", "$19.99 / year", bestValue = true, selected = yearly) { yearly = true }
-            Spacer(Modifier.height(10.dp))
-            PlanOption("Monthly", "$2.99 / month", bestValue = false, selected = !yearly) { yearly = false }
+            if (isPremium) {
+                Pill("You're on Premium. Thank you!", icon = Icons.Rounded.Check, container = Palette.SoftSage, content = Palette.Forest)
+            } else {
+                PlanOption("Yearly", "${prices?.yearly ?: "$19.99"} / year", bestValue = true, selected = yearly) { yearly = true }
+                Spacer(Modifier.height(10.dp))
+                PlanOption("Monthly", "${prices?.monthly ?: "$2.99"} / month", bestValue = false, selected = !yearly) { yearly = false }
+                Spacer(Modifier.height(10.dp))
+                Text(
+                    "Renews automatically. Cancel anytime in Google Play.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Palette.Muted,
+                )
+            }
             Spacer(Modifier.height(16.dp))
         }
-        PrimaryButton("Start free trial", { onStartTrial(yearly) })
+        val trialDays = if (yearly) prices?.yearlyTrialDays ?: 0 else prices?.monthlyTrialDays ?: 0
+        if (isPremium) {
+            PrimaryButton("Done", onClose)
+        } else {
+            PrimaryButton(if (trialDays > 0) "Start $trialDays-day free trial" else "Get Premium", { onStartTrial(yearly) })
+        }
         TextButton(onClick = onRestore, modifier = Modifier.fillMaxWidth()) {
             Text("Restore purchase", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
         }

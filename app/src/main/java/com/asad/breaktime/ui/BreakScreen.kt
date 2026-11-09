@@ -45,6 +45,8 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.SwitchDefaults
+import androidx.compose.material3.Switch
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,6 +106,8 @@ fun BreakScreen(
     val active = remember(version, now) { store.isBreakActive(now) }
     val lockedCount = remember(version) { store.lockedApps.size }
     val streak = remember(version) { store.currentStreak() }
+    val premium = remember(version) { store.isPremium }
+    val strict = remember(version) { store.strictMode }
 
     if (active) {
         var confirm by remember { mutableStateOf(false) }
@@ -116,6 +120,7 @@ fun BreakScreen(
             tip = tip,
             onEndEarly = { confirm = true },
             modifier = modifier,
+            strict = store.breakIsStrict,
         )
         if (confirm) {
             EndEarlyDialog(
@@ -140,6 +145,9 @@ fun BreakScreen(
             onSetup = onSetup,
             onPickApps = onPickApps,
             onPremium = onPremium,
+            isPremium = premium,
+            strict = strict,
+            onStrictChange = { store.strictMode = it },
             onStart = {
                 val start = {
                     BreakScheduler.startBreak(context, minutes)
@@ -189,12 +197,19 @@ fun HomeContent(
     onPremium: () -> Unit,
     onStart: () -> Unit,
     modifier: Modifier = Modifier,
+    isPremium: Boolean = false,
+    strict: Boolean = false,
+    onStrictChange: (Boolean) -> Unit = {},
 ) {
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
         BrandHeader {
             StreakBadge(streak)
             Spacer(Modifier.width(8.dp))
-            Pill("Premium", icon = Icons.Rounded.AutoAwesome, onClick = onPremium)
+            if (isPremium) {
+                Pill("Premium", icon = Icons.Rounded.AutoAwesome, container = Palette.Sunlight, content = Palette.DeepPine, onClick = onPremium)
+            } else {
+                Pill("Premium", icon = Icons.Rounded.AutoAwesome, onClick = onPremium)
+            }
         }
         Column(
             Modifier
@@ -254,7 +269,13 @@ fun HomeContent(
                     }
                 }
             }
-            Spacer(Modifier.height(24.dp))
+            Spacer(Modifier.height(16.dp))
+            StrictModeRow(
+                strict = strict,
+                isPremium = isPremium,
+                onChange = { if (isPremium) onStrictChange(it) else onPremium() },
+            )
+            Spacer(Modifier.height(20.dp))
         }
 
         Row(
@@ -420,6 +441,7 @@ fun BreakActiveContent(
     tip: String,
     onEndEarly: () -> Unit,
     modifier: Modifier = Modifier,
+    strict: Boolean = false,
 ) {
     val endTime = remember(endsAt) { DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(endsAt)) }
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
@@ -437,7 +459,11 @@ fun BreakActiveContent(
             Spacer(Modifier.height(28.dp))
             TipCard("Try this", tip)
         }
-        GhostButton("End break early", onEndEarly, Modifier.align(Alignment.CenterHorizontally))
+        if (strict) {
+            StatusLabel("Strict mode is on until your break ends", icon = Icons.Rounded.Lock, modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 12.dp))
+        } else {
+            GhostButton("End break early", onEndEarly, Modifier.align(Alignment.CenterHorizontally))
+        }
         Spacer(Modifier.height(12.dp))
     }
 }
@@ -533,4 +559,43 @@ fun Context.findActivity(): Activity? {
         c = c.baseContext
     }
     return null
+}
+
+/** Premium toggle: when on, breaks can't be ended early. Free users see it locked and are sent to Premium. */
+@Composable
+private fun StrictModeRow(strict: Boolean, isPremium: Boolean, onChange: (Boolean) -> Unit) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .hairline()
+            .clickable { onChange(!strict) }
+            .padding(horizontal = 14.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text("Strict mode", style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
+                if (!isPremium) {
+                    Spacer(Modifier.width(6.dp))
+                    Icon(Icons.Rounded.AutoAwesome, null, tint = Palette.Forest, modifier = Modifier.size(13.dp))
+                }
+            }
+            Text(
+                if (isPremium) "Breaks can't be ended early" else "Premium: breaks can't be ended early",
+                style = MaterialTheme.typography.bodySmall,
+                color = Palette.Muted,
+            )
+        }
+        Switch(
+            checked = isPremium && strict,
+            onCheckedChange = { onChange(it) },
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = Palette.Card,
+                checkedTrackColor = Palette.Forest,
+                uncheckedThumbColor = Palette.SageDeep,
+                uncheckedTrackColor = Palette.Card,
+                uncheckedBorderColor = Palette.SageDeep,
+            ),
+        )
+    }
 }

@@ -28,6 +28,7 @@ import com.asad.breaktime.ui.InstalledApp
 import com.asad.breaktime.ui.LockedAppContent
 import com.asad.breaktime.ui.Palette
 import com.asad.breaktime.ui.PremiumContent
+import com.asad.breaktime.data.PremiumPrices
 import com.asad.breaktime.ui.ProgressContent
 import com.asad.breaktime.ui.SetupPage
 import com.asad.breaktime.ui.Tab
@@ -126,4 +127,24 @@ class ScreensTest {
 
     @Test fun s11_complete() = shot("11_complete") { BreakCompleteContent(30, 3, {}, {}) }
     @Test fun s12_premium() = shot("12_premium") { PremiumContent({}, {}, {}) }
+
+    @Test fun s12b_premium_trial() = shot("12b_premium_trial") {
+        PremiumContent({}, {}, {}, prices = PremiumPrices("Rs 850", "Rs 5,600", 0, 7))
+    }
+
+    @Test fun s12c_premium_active() = shot("12c_premium_active") { PremiumContent({}, {}, {}, isPremium = true) }
+
+    @Test fun s04c_home_premium() = shot("04c_home_premium_strict") {
+        Tabs(Tab.Break) { m ->
+            HomeContent("Good evening", 5, 60, {}, {}, 6, true, {}, {}, {}, {}, m, isPremium = true, strict = true)
+        }
+    }
+
+    @Test fun s06b_active_strict() = shot("06b_active_strict") {
+        Tabs(Tab.Break) { m ->
+            val now = System.currentTimeMillis()
+            val endsAt = now + 23 * 60_000L
+            BreakActiveContent(endsAt, 0.62f, endsAt - now, "Go for a 10-minute walk. No phone needed.", {}, m, strict = true)
+        }
+    }
 }

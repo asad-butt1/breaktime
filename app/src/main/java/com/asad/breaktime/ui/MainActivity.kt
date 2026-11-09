@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import com.asad.breaktime.data.Billing
 import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.service.BreakScheduler
 
@@ -53,6 +54,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         BreakScheduler.finishIfDue(this)
+        Billing.refresh(this)
     }
 }
 
@@ -94,15 +96,32 @@ private fun MainApp(store: BreakStore) {
                 onConsent = setup.consent,
             )
         }
-        overlay == Overlay.Premium -> PremiumContent(
-            onClose = { overlay = Overlay.None },
-            onStartTrial = {
-                Toast.makeText(context, "Premium is coming soon. Thanks for your interest!", Toast.LENGTH_SHORT).show()
-            },
-            onRestore = {
-                Toast.makeText(context, "No purchases to restore yet.", Toast.LENGTH_SHORT).show()
-            },
-        )
+        overlay == Overlay.Premium -> {
+            val prices by Billing.prices.collectAsState()
+            val premium = remember(version) { store.isPremium }
+            PremiumContent(
+                onClose = { overlay = Overlay.None },
+                onStartTrial = { yearly ->
+                    val activity = context.findActivity()
+                    if (activity == null || !Billing.buy(activity, yearly)) {
+                        Billing.refresh(context)
+                        Toast.makeText(context, "Premium isn't available right now. Please try again in a moment.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onRestore = {
+                    Billing.restore(context) { found ->
+                        val msg = when (found) {
+                            true -> "Premium restored. Welcome back!"
+                            false -> "No Premium purchase found on this Google account."
+                            null -> "Couldn't reach Google Play. Please try again."
+                        }
+                        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+                    }
+                },
+                prices = prices,
+                isPremium = premium,
+            )
+        }
         else -> Scaffold(
             containerColor = Palette.Parchment,
             bottomBar = { BottomNav(tab) { tab = it } },

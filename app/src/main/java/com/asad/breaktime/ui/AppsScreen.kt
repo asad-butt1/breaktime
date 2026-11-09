@@ -82,6 +82,7 @@ fun AppsScreen(modifier: Modifier = Modifier, onDone: () -> Unit, onPremium: () 
     val version by store.changes.collectAsState()
     val locked = remember(version) { store.lockedApps }
     val breakActive = remember(version) { store.isBreakActive() }
+    val limit = remember(version) { store.appLimit }
     // Order by what was chosen when the screen opened, so rows don't jump while ticking.
     val lockedAtOpen = remember { store.lockedApps }
     var query by remember { mutableStateOf("") }
@@ -118,7 +119,7 @@ fun AppsScreen(modifier: Modifier = Modifier, onDone: () -> Unit, onPremium: () 
                     store.lockedApps = locked - pkg
                     limitHit = false
                 }
-            } else if (locked.size >= BreakStore.FREE_APP_LIMIT) {
+            } else if (locked.size >= limit) {
                 limitHit = true
             } else {
                 store.lockedApps = locked + pkg
@@ -128,6 +129,7 @@ fun AppsScreen(modifier: Modifier = Modifier, onDone: () -> Unit, onPremium: () 
         onDone = onDone,
         onPremium = onPremium,
         modifier = modifier,
+        isPremium = limit == Int.MAX_VALUE,
     )
 }
 
@@ -143,6 +145,7 @@ fun ChooseAppsContent(
     onDone: () -> Unit,
     onPremium: () -> Unit,
     modifier: Modifier = Modifier,
+    isPremium: Boolean = false,
 ) {
     val limit = BreakStore.FREE_APP_LIMIT
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
@@ -151,7 +154,7 @@ fun ChooseAppsContent(
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = Palette.DeepPine)
             }
             Spacer(Modifier.weight(1f))
-            StatusLabel("Free plan")
+            StatusLabel(if (isPremium) "Premium" else "Free plan")
         }
         ScreenTitle("Choose apps to lock", "Pick the apps you'd like to pause.")
         Spacer(Modifier.height(14.dp))
@@ -186,12 +189,12 @@ fun ChooseAppsContent(
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                note ?: "${locked.size} of $limit chosen on the free plan",
+                note ?: if (isPremium) "${locked.size} chosen" else "${locked.size} of $limit chosen on the free plan",
                 style = MaterialTheme.typography.labelMedium,
                 color = if (note != null) Palette.Danger else Palette.DeepPine,
                 modifier = Modifier.weight(1f),
             )
-            Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
+            if (!isPremium) Row(horizontalArrangement = Arrangement.spacedBy(3.dp)) {
                 repeat(limit) { i ->
                     Box(
                         Modifier
@@ -224,7 +227,7 @@ fun ChooseAppsContent(
             }
         }
 
-        Row(
+        if (isPremium) Spacer(Modifier.height(12.dp)) else Row(
             Modifier
                 .fillMaxWidth()
                 .clickable(onClick = onPremium)

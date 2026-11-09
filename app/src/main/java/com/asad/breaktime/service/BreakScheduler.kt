@@ -31,7 +31,9 @@ object BreakScheduler {
     }
 
     fun endEarly(context: Context) {
-        BreakStore.get(context).endEarly()
+        val store = BreakStore.get(context)
+        if (store.breakIsStrict) return // Strict mode: no way out until the timer ends.
+        store.endEarly()
         cancelEndAlarm(context)
         NotificationManagerCompat.from(context).cancel(NOTIF_ONGOING)
     }
