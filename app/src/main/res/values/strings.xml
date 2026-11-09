@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">BreakTime</string>
+    <string name="accessibility_label">BreakTime app lock</string>
+    <string name="accessibility_description">BreakTime uses this to notice when you open an app you chose to lock during a break, and shows a break screen instead. It only checks which app is open. It never reads what is on your screen or what you type, and nothing leaves your phone.</string>
+</resources>
