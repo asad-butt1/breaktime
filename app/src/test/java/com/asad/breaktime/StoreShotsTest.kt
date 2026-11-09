@@ -27,25 +27,35 @@ import com.asad.breaktime.ui.Tab
 import com.asad.breaktime.ui.WelcomePage
 import org.junit.Rule
 import org.junit.Test
-import java.awt.image.BufferedImage
 import java.io.File
-import javax.imageio.ImageIO
+import java.lang.reflect.Proxy
 
-/** Writes full-resolution PNGs (Paparazzi's normal output is scaled down). */
+/**
+ * Writes full-resolution PNGs (Paparazzi's normal output is scaled down).
+ * Uses reflection because java.awt isn't on the Android unit-test compile classpath.
+ */
 private class FullResHandler(private val dir: File) : SnapshotHandler {
-    override fun newFrameHandler(snapshot: Snapshot, frameCount: Int, fps: Int) = object : SnapshotHandler.FrameHandler {
-        override fun handle(image: BufferedImage) {
-            dir.mkdirs()
-            ImageIO.write(image, "png", File(dir, "${snapshot.name}.png"))
-        }
-        override fun close() = Unit
+    override fun newFrameHandler(snapshot: Snapshot, frameCount: Int, fps: Int): SnapshotHandler.FrameHandler {
+        val out = File(dir, "${snapshot.name}.png")
+        return Proxy.newProxyInstance(
+            javaClass.classLoader,
+            arrayOf(SnapshotHandler.FrameHandler::class.java),
+        ) { _, method, args ->
+            if (method.name == "handle") {
+                dir.mkdirs()
+                Class.forName("javax.imageio.ImageIO")
+                    .getMethod("write", Class.forName("java.awt.image.RenderedImage"), String::class.java, File::class.java)
+                    .invoke(null, args[0], "png", out)
+            }
+            null
+        } as SnapshotHandler.FrameHandler
     }
     override fun close() = Unit
 }
 
 /**
  * Play Store screenshots with realistic, brand-free sample data.
- * Output: app/build/store-shots/*.png at 1080 x 2340.
+ * Output: PNGs in app/build/store-shots at 1080 x 2340.
  */
 class StoreShotsTest {
     @get:Rule
