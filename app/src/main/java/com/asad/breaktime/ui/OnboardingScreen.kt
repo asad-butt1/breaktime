@@ -99,7 +99,7 @@ private fun OnboardingFrame(
             .navigationBarsPadding()
             .padding(horizontal = 20.dp),
     ) {
-        val pill: @Composable () -> Unit = { if (pageIndex != null) Pill("0${pageIndex + 1} / 0$PAGES") }
+        val pill: @Composable () -> Unit = { if (pageIndex != null) StatusLabel("${pageIndex + 1} of $PAGES") }
         if (onBack == null) {
             BrandHeader { pill() }
         } else {
@@ -196,16 +196,16 @@ fun HowItWorksPage(onBack: () -> Unit, onNext: () -> Unit) {
         bottom = { PrimaryButton("Next", onNext, showArrow = true) },
     ) {
         ScreenTitle("How it works", "Five small steps to a real break.")
-        Spacer(Modifier.height(20.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Spacer(Modifier.height(14.dp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             HOW_STEPS.forEachIndexed { i, step ->
                 AppCard(Modifier.fillMaxWidth()) {
                     Row(
-                        Modifier.padding(14.dp),
+                        Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(14.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        IconTile(step.icon, container = step.tile)
+                        IconTile(step.icon, container = step.tile, size = 34.dp)
                         Column(Modifier.weight(1f)) {
                             Text(step.title, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
                             Text(step.body, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
@@ -255,6 +255,10 @@ fun SetupContent(
 ) {
     ScreenTitle("Set up app lock", "Allow Android Accessibility so BreakTime can tell which app you open.")
     Spacer(Modifier.height(16.dp))
+    if (lockOn) {
+        LockOnCard()
+        return
+    }
     Row(
         Modifier
             .fillMaxWidth()
@@ -305,7 +309,35 @@ fun SetupContent(
                 }
             }
         }
-        StatusBar(lockOn)
+    }
+}
+
+@Composable
+private fun LockOnCard() {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(20.dp))
+            .background(Palette.SoftSage)
+            .padding(20.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier
+                .size(56.dp)
+                .clip(CircleShape)
+                .background(Palette.Forest),
+            contentAlignment = Alignment.Center,
+        ) { Icon(Icons.Rounded.Check, null, tint = Color.White, modifier = Modifier.size(30.dp)) }
+        Spacer(Modifier.height(12.dp))
+        Text("App lock is on", style = MaterialTheme.typography.titleLarge, color = Palette.DeepPine)
+        Spacer(Modifier.height(4.dp))
+        Text(
+            "You're all set. BreakTime can now pause the apps you choose during a break.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = Palette.Muted,
+            textAlign = TextAlign.Center,
+        )
     }
 }
 
@@ -321,29 +353,6 @@ private fun LinkPill(text: String, onClick: () -> Unit) {
     ) {
         Text(text, style = MaterialTheme.typography.labelMedium, color = Palette.Forest)
         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = Palette.Forest, modifier = Modifier.size(16.dp))
-    }
-}
-
-@Composable
-private fun StatusBar(lockOn: Boolean) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (lockOn) Palette.SoftSage else Palette.Sunlight.copy(alpha = 0.5f))
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        Icon(
-            if (lockOn) Icons.Rounded.Check else Icons.Rounded.Lock, null,
-            tint = Palette.Forest, modifier = Modifier.size(16.dp),
-        )
-        Text(
-            if (lockOn) "App lock is on" else "App lock is off",
-            style = MaterialTheme.typography.labelMedium,
-            color = Palette.DeepPine,
-        )
     }
 }
 

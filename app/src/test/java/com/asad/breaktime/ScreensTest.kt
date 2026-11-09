@@ -64,17 +64,17 @@ class ScreensTest {
     @Test fun s01_welcome() = shot("01_welcome") { WelcomePage({}, {}) }
     @Test fun s02_how() = shot("02_how") { HowItWorksPage({}, {}) }
     @Test fun s03_setup() = shot("03_setup") { SetupPage(false, true, {}, {}, {}, {}, {}) }
-    @Test fun s03b_setup_on() = shot("03b_setup_on") { SetupPage(true, false, {}, {}, {}, {}, {}) }
+    @Test fun s03b_setup_on() = shot("03b_setup_on") { SetupPage(true, true, {}, {}, {}, {}, {}) }
 
     @Test fun s04_home() = shot("04_home") {
         Tabs(Tab.Break) { m ->
-            HomeContent("Good afternoon", 30, {}, {}, 3, true, {}, {}, {}, {}, m)
+            HomeContent("Good afternoon", 3, 30, {}, {}, 3, true, {}, {}, {}, {}, m)
         }
     }
 
     @Test fun s04b_home_setup() = shot("04b_home_needs_setup") {
         Tabs(Tab.Break) { m ->
-            HomeContent("Good morning", 95, {}, {}, 0, false, {}, {}, {}, {}, m)
+            HomeContent("Good morning", 0, 10, {}, {}, 0, false, {}, {}, {}, {}, m)
         }
     }
 

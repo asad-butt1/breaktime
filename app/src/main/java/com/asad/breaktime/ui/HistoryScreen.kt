@@ -98,7 +98,7 @@ fun ProgressContent(
     val zone = remember { ZoneId.systemDefault() }
 
     LazyColumn(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-        item { BrandHeader { Pill("This week", icon = Icons.AutoMirrored.Rounded.ShowChart) } }
+        item { BrandHeader() }
         item {
             Spacer(Modifier.height(8.dp))
             ScreenTitle("Your progress", "A little time back adds up.")

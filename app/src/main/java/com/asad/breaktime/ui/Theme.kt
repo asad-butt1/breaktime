@@ -29,6 +29,7 @@ object Palette {
     val Line = Color(0xFFE4E9E2)
     val SageDeep = Color(0xFF9CC3AA)
     val Danger = Color(0xFFB4483C)
+    val Flame = Color(0xFFE2702F)
 }
 
 @OptIn(ExperimentalTextApi::class)

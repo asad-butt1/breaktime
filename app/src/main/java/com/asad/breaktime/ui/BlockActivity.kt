@@ -82,7 +82,7 @@ class BlockActivity : ComponentActivity() {
                     appIcon = appIcon,
                     endsAt = endsAt,
                     fraction = (endsAt - now).toFloat() / (endsAt - store.breakStartedAt).coerceAtLeast(1L),
-                    remaining = endsAt - now,
+                    remaining = (endsAt - now).coerceIn(0L, endsAt - store.breakStartedAt),
                     tip = tip,
                     onBack = { goHome() },
                 )
@@ -129,7 +129,7 @@ fun LockedAppContent(
             .navigationBarsPadding()
             .padding(horizontal = 20.dp),
     ) {
-        BrandHeader { Pill("App paused", icon = Icons.Rounded.Lock) }
+        BrandHeader { StatusLabel("App paused", icon = Icons.Rounded.Lock) }
         Column(
             Modifier
                 .weight(1f)

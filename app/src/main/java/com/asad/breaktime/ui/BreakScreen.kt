@@ -34,6 +34,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Add
 import androidx.compose.material.icons.rounded.AutoAwesome
+import androidx.compose.material.icons.rounded.LocalFireDepartment
 import androidx.compose.material.icons.rounded.Lock
 import androidx.compose.material.icons.rounded.Pause
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -102,6 +103,7 @@ fun BreakScreen(
     val lockOn = remember(now) { BlockerService.isEnabled(context) }
     val active = remember(version, now) { store.isBreakActive(now) }
     val lockedCount = remember(version) { store.lockedApps.size }
+    val streak = remember(version) { store.currentStreak() }
 
     if (active) {
         var confirm by remember { mutableStateOf(false) }
@@ -109,7 +111,8 @@ fun BreakScreen(
         BreakActiveContent(
             endsAt = store.breakEndsAt,
             fraction = ((store.breakEndsAt - now).toFloat() / (store.breakEndsAt - store.breakStartedAt).coerceAtLeast(1L)),
-            remaining = store.breakEndsAt - now,
+            // Never show more than the chosen length (e.g. 1:00, not 1:01, right after starting).
+            remaining = (store.breakEndsAt - now).coerceIn(0L, store.breakEndsAt - store.breakStartedAt),
             tip = tip,
             onEndEarly = { confirm = true },
             modifier = modifier,
@@ -128,6 +131,7 @@ fun BreakScreen(
         var showCustom by remember { mutableStateOf(false) }
         HomeContent(
             greeting = greeting(),
+            streak = streak,
             minutes = minutes,
             onMinutesChange = { minutes = it },
             onCustom = { showCustom = true },
@@ -137,7 +141,10 @@ fun BreakScreen(
             onPickApps = onPickApps,
             onPremium = onPremium,
             onStart = {
-                val start = { BreakScheduler.startBreak(context, minutes) }
+                val start = {
+                    BreakScheduler.startBreak(context, minutes)
+                    now = System.currentTimeMillis()
+                }
                 val activity = context.findActivity()
                 if (activity != null) Ads.showBreakStartAd(activity) { start() } else start()
             },
@@ -171,6 +178,7 @@ private fun greeting(): String {
 @Composable
 fun HomeContent(
     greeting: String,
+    streak: Int,
     minutes: Int,
     onMinutesChange: (Int) -> Unit,
     onCustom: () -> Unit,
@@ -183,14 +191,25 @@ fun HomeContent(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-        BrandHeader { Pill("Premium", icon = Icons.Rounded.AutoAwesome, onClick = onPremium) }
+        BrandHeader {
+            StreakBadge(streak)
+            Spacer(Modifier.width(8.dp))
+            Pill("Premium", icon = Icons.Rounded.AutoAwesome, onClick = onPremium)
+        }
         Column(
             Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
         ) {
             Spacer(Modifier.height(8.dp))
-            ScreenTitle(greeting, "Take a little time for yourself.")
+            ScreenTitle(
+                greeting,
+                when (streak) {
+                    0 -> "Take a little time for yourself. Finish a break to start a streak."
+                    1 -> "You're on a 1-day streak. Take a break today to keep it going."
+                    else -> "You're on a $streak-day streak. Keep it going!"
+                },
+            )
             Spacer(Modifier.height(16.dp))
 
             if (!lockOn) {
@@ -225,9 +244,9 @@ fun HomeContent(
                             val isCustom = value == -1
                             val selected = if (isCustom) minutes !in PRESETS else minutes == value
                             TimeChip(
-                                label = if (isCustom && selected) formatDuration(minutes) else label,
+                                label = label,
                                 selected = selected,
-                                leadingPlus = isCustom && !selected,
+                                leadingPlus = isCustom,
                                 onClick = { if (isCustom) onCustom() else onMinutesChange(value) },
                                 modifier = Modifier.weight(1f),
                             )
@@ -263,6 +282,27 @@ fun HomeContent(
             enabled = lockOn && lockedCount > 0,
         )
         Spacer(Modifier.height(12.dp))
+    }
+}
+
+/** 🔥 + number of days in a row with a completed break. */
+@Composable
+fun StreakBadge(streak: Int) {
+    val active = streak > 0
+    Row(
+        Modifier
+            .clip(CircleShape)
+            .background(if (active) Palette.Sunlight else Palette.Line)
+            .padding(horizontal = 10.dp, vertical = 5.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(3.dp),
+    ) {
+        Icon(
+            Icons.Rounded.LocalFireDepartment, "Streak",
+            tint = if (active) Palette.Flame else Palette.Muted,
+            modifier = Modifier.size(16.dp),
+        )
+        Text("$streak", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
     }
 }
 
@@ -383,7 +423,7 @@ fun BreakActiveContent(
 ) {
     val endTime = remember(endsAt) { DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(endsAt)) }
     Column(modifier.fillMaxSize().padding(horizontal = 20.dp)) {
-        BrandHeader { Pill("Break active", icon = Icons.Rounded.Pause) }
+        BrandHeader { StatusLabel("Break active", icon = Icons.Rounded.Pause) }
         Column(
             Modifier
                 .weight(1f)

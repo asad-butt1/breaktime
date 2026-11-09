@@ -110,6 +110,19 @@ fun Pill(
     }
 }
 
+/** A status label in a header (not tappable): small icon + muted text, no background. */
+@Composable
+fun StatusLabel(text: String, icon: ImageVector? = null, modifier: Modifier = Modifier) {
+    Row(
+        modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(5.dp),
+    ) {
+        if (icon != null) Icon(icon, null, tint = Palette.Muted, modifier = Modifier.size(14.dp))
+        Text(text, style = MaterialTheme.typography.labelMedium, color = Palette.Muted)
+    }
+}
+
 @Composable
 fun PrimaryButton(
     text: String,
@@ -296,20 +309,63 @@ private fun DrawScope.drawLandscape(sunX: Float, sunY: Float, showPath: Boolean,
     hill(Color(0xFF79AE8E), 0.70f, 0.35f, 0.62f, 0.65f, 0.80f, 0.66f)
     hill(Color(0xFF4F8C6F), 0.84f, 0.30f, 0.74f, 0.70f, 0.92f, 0.76f)
 
-    if (showPath) {
-        val p = Path().apply {
-            moveTo(w * 0.62f, h * 0.64f)
-            cubicTo(w * 0.80f, h * 0.70f, w * 0.40f, h * 0.78f, w * 0.58f, h * 0.86f)
-            cubicTo(w * 0.72f, h * 0.92f, w * 0.52f, h * 0.98f, w * 0.48f, h * 1.02f)
-        }
-        drawPath(p, Color(0xFFEFE3BC), style = Stroke(width = w * 0.035f, cap = StrokeCap.Round))
-    }
+    if (showPath) drawWindingPath(w, h)
     // Grass tufts
     val tuft = Color(0xFF8DBB9C)
     listOf(0.84f to 0.86f, 0.9f to 0.88f).forEach { (x, y) ->
         drawLine(tuft, Offset(w * x, h * y), Offset(w * x - w * 0.015f, h * y - h * 0.05f), 1.5f * density, StrokeCap.Round)
         drawLine(tuft, Offset(w * x, h * y), Offset(w * x + w * 0.02f, h * y - h * 0.06f), 1.5f * density, StrokeCap.Round)
     }
+}
+
+/**
+ * A footpath that winds from the far hills toward the viewer: a filled ribbon that
+ * gets wider as it comes closer, so it reads as a path with perspective, not a line.
+ */
+private fun DrawScope.drawWindingPath(w: Float, h: Float) {
+    // Centre line as two cubic Bézier segments (far → near), in fractions of the box.
+    val segs = listOf(
+        floatArrayOf(0.60f, 0.63f, 0.70f, 0.67f, 0.70f, 0.72f, 0.56f, 0.76f),
+        floatArrayOf(0.56f, 0.76f, 0.36f, 0.82f, 0.40f, 0.90f, 0.54f, 1.04f),
+    )
+    val pts = ArrayList<Offset>()
+    segs.forEach { c ->
+        for (i in 0..24) {
+            val t = i / 24f
+            val u = 1 - t
+            val x = u * u * u * c[0] + 3 * u * u * t * c[2] + 3 * u * t * t * c[4] + t * t * t * c[6]
+            val y = u * u * u * c[1] + 3 * u * u * t * c[3] + 3 * u * t * t * c[5] + t * t * t * c[7]
+            pts.add(Offset(x * w, y * h))
+        }
+    }
+    val left = ArrayList<Offset>()
+    val right = ArrayList<Offset>()
+    for (i in pts.indices) {
+        val a = pts[maxOf(0, i - 1)]
+        val b = pts[minOf(pts.size - 1, i + 1)]
+        var nx = -(b.y - a.y)
+        var ny = b.x - a.x
+        val len = kotlin.math.sqrt(nx * nx + ny * ny).coerceAtLeast(0.001f)
+        nx /= len; ny /= len
+        val t = i / (pts.size - 1f)
+        val half = w * (0.004f + 0.085f * t * t) // narrow far away, wide up close
+        left.add(Offset(pts[i].x + nx * half, pts[i].y + ny * half))
+        right.add(Offset(pts[i].x - nx * half, pts[i].y - ny * half))
+    }
+    val ribbon = Path().apply {
+        moveTo(left[0].x, left[0].y)
+        left.drop(1).forEach { lineTo(it.x, it.y) }
+        right.asReversed().forEach { lineTo(it.x, it.y) }
+        close()
+    }
+    drawPath(ribbon, Color(0xFFF1E6C2))
+    drawPath(ribbon, Color(0xFFD9C994), style = Stroke(width = 1f * density))
+    // Soft worn centre for a bit of depth
+    val centre = Path().apply {
+        moveTo(pts[pts.size / 3].x, pts[pts.size / 3].y)
+        pts.drop(pts.size / 3 + 1).forEach { lineTo(it.x, it.y) }
+    }
+    drawPath(centre, Color(0xFFF8F0D6), style = Stroke(width = w * 0.012f, cap = StrokeCap.Round))
 }
 
 // ---------------------------------------------------------------- Rings

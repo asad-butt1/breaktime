@@ -54,7 +54,7 @@ fun BreakCompleteContent(minutes: Int, streak: Int, onAnother: () -> Unit, onDon
             .navigationBarsPadding()
             .padding(horizontal = 20.dp),
     ) {
-        BrandHeader { Pill("Break finished", icon = Icons.Rounded.Check) }
+        BrandHeader { StatusLabel("Break finished", icon = Icons.Rounded.Check) }
         Column(
             Modifier
                 .weight(1f)
@@ -150,7 +150,7 @@ fun PremiumContent(onClose: () -> Unit, onStartTrial: (yearly: Boolean) -> Unit,
         Row(Modifier.fillMaxWidth().height(48.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onClose) { Icon(Icons.Rounded.Close, "Close", tint = Palette.DeepPine) }
             Spacer(Modifier.weight(1f))
-            Pill("BreakTime Premium", icon = Icons.Rounded.AutoAwesome)
+            StatusLabel("BreakTime Premium", icon = Icons.Rounded.AutoAwesome)
         }
         Column(
             Modifier

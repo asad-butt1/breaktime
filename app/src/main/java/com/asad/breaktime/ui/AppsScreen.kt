@@ -150,7 +150,7 @@ fun ChooseAppsContent(
                 Icon(Icons.AutoMirrored.Rounded.ArrowBack, "Back", tint = Palette.DeepPine)
             }
             Spacer(Modifier.weight(1f))
-            Pill("Free plan")
+            StatusLabel("Free plan")
         }
         ScreenTitle("Choose apps to lock", "Pick the apps you'd like to pause.")
         Spacer(Modifier.height(14.dp))
