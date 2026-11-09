@@ -13,6 +13,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import app.cash.paparazzi.DeviceConfig
+import com.android.resources.ScreenOrientation
 import app.cash.paparazzi.Paparazzi
 import app.cash.paparazzi.Snapshot
 import app.cash.paparazzi.SnapshotHandler
@@ -70,7 +71,7 @@ class StoreShotsTest {
     val paparazzi = Paparazzi(
         // Paparazzi shrinks any image bigger than 1000px, so each screen is rendered as
         // 4 horizontal strips of 1000 x $TILE px and stitched together afterwards.
-        deviceConfig = DeviceConfig.PIXEL_5.copy(screenWidth = 1000, screenHeight = TILE),
+        deviceConfig = DeviceConfig.PIXEL_5.copy(screenWidth = 1000, screenHeight = TILE, orientation = ScreenOrientation.LANDSCAPE),
         showSystemUi = false,
         snapshotHandler = FullResHandler(File("build/store-shots")),
     )
