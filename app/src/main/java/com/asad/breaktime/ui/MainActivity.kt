@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Apps
@@ -13,12 +14,17 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.service.BreakScheduler
 
 class MainActivity : ComponentActivity() {
@@ -28,6 +34,30 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             BreakTimeTheme {
+                val store = remember { BreakStore.get(this) }
+                var onboarded by remember { mutableStateOf(store.onboardingDone) }
+                if (!onboarded) {
+                    Surface(Modifier.fillMaxSize()) {
+                        OnboardingScreen(onFinish = {
+                            store.onboardingDone = true
+                            onboarded = true
+                        })
+                    }
+                } else {
+                    MainTabs()
+                }
+            }
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        BreakScheduler.finishIfDue(this)
+    }
+}
+
+@Composable
+private fun MainTabs() {
                 var tab by rememberSaveable { mutableIntStateOf(0) }
                 Scaffold(
                     bottomBar = {
@@ -53,16 +83,8 @@ class MainActivity : ComponentActivity() {
                     val modifier = Modifier.padding(padding)
                     when (tab) {
                         0 -> BreakScreen(modifier, onPickApps = { tab = 1 })
-                        1 -> AppsScreen(modifier)
+                        1 -> AppsScreen(modifier, onDone = { tab = 0 })
                         else -> HistoryScreen(modifier)
                     }
                 }
             }
-        }
-    }
-
-    override fun onResume() {
-        super.onResume()
-        BreakScheduler.finishIfDue(this)
-    }
-}

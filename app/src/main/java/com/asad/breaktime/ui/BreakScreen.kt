@@ -89,7 +89,7 @@ fun BreakScreen(modifier: Modifier = Modifier, onPickApps: () -> Unit) {
     ) {
         Text("BreakTime", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
 
-        if (!lockOn) LockPermissionCard()
+        if (!lockOn) SetupGuide(lockOn = false)
         NotificationPermissionRequest()
 
         if (active) {
@@ -214,28 +214,6 @@ private fun ActiveBreak(remaining: Long) {
             },
             dismissButton = { TextButton(onClick = { confirm = false }) { Text("Keep going") } },
         )
-    }
-}
-
-@Composable
-private fun LockPermissionCard() {
-    val context = LocalContext.current
-    Card(
-        Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer),
-    ) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Turn on app lock", fontWeight = FontWeight.SemiBold)
-            Text(
-                "To lock apps, BreakTime needs Accessibility access. It only checks which app is open " +
-                    "and never reads your screen. Tap below, find BreakTime, and switch it on."
-            )
-            Button(onClick = {
-                context.startActivity(
-                    Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                )
-            }) { Text("Open settings") }
-        }
     }
 }
 

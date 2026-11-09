@@ -35,6 +35,15 @@ class BreakStore private constructor(context: Context) {
         _changes.value = _changes.value + 1
     }
 
+    // ---- First run ----
+
+    var onboardingDone: Boolean
+        get() = prefs.getBoolean(KEY_ONBOARDED, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_ONBOARDED, value).apply()
+            changed()
+        }
+
     // ---- Locked apps ----
 
     var lockedApps: Set<String>
@@ -141,6 +150,7 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_START = "break_start"
         private const val KEY_MINUTES = "break_minutes"
         private const val KEY_HISTORY = "history"
+        private const val KEY_ONBOARDED = "onboarding_done"
 
         /** Free plan limit. Premium (coming later) will remove it. */
         const val FREE_APP_LIMIT = 3

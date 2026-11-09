@@ -10,10 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -59,12 +61,14 @@ private val SUGGESTED = listOf(
 )
 
 @Composable
-fun AppsScreen(modifier: Modifier = Modifier) {
+fun AppsScreen(modifier: Modifier = Modifier, onDone: () -> Unit) {
     val context = LocalContext.current
     val store = remember { BreakStore.get(context) }
     val version by store.changes.collectAsState()
     val locked = remember(version) { store.lockedApps }
     val breakActive = remember(version) { store.isBreakActive() }
+    // Order by what was chosen when the screen opened, so rows don't jump while ticking.
+    val lockedAtOpen = remember { store.lockedApps }
     var query by remember { mutableStateOf("") }
     var limitHit by remember { mutableStateOf(false) }
 
@@ -108,13 +112,16 @@ fun AppsScreen(modifier: Modifier = Modifier) {
             .filter { query.isBlank() || it.label.contains(query, ignoreCase = true) }
             .sortedWith(
                 compareBy<InstalledApp>(
-                    { it.packageName !in locked },
+                    { it.packageName !in lockedAtOpen },
                     { SUGGESTED.indexOf(it.packageName).let { i -> if (i < 0) Int.MAX_VALUE else i } },
                     { it.label.lowercase() },
                 )
             )
 
-        LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+        LazyColumn(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+        ) {
             items(shown, key = { it.packageName }) { app ->
                 val checked = app.packageName in locked
                 val toggle: () -> Unit = {
@@ -147,6 +154,16 @@ fun AppsScreen(modifier: Modifier = Modifier) {
                     Checkbox(checked = checked, onCheckedChange = { toggle() })
                 }
             }
+        }
+        Button(
+            onClick = onDone,
+            enabled = locked.isNotEmpty(),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(vertical = 12.dp)
+                .height(52.dp),
+        ) {
+            Text(if (locked.isEmpty()) "Pick at least one app" else "Done (${locked.size} selected)")
         }
     }
 }
