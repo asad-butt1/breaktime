@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Safe zone is the centre 66dp; hills run edge to edge. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#F9DFA0" android:pathData="M34,64a20,20 0,0 1,40 0z" />
+    <path android:fillColor="#173D34" android:pathData="M47,50h4.5v12h-4.5z M56.5,50h4.5v12h-4.5z" />
+    <path android:fillColor="#E2EFE4" android:pathData="M0,66C20,59 36,69 54,66C70,63 88,58 108,63V108H0z" />
+    <path android:fillColor="#9CC3AA" android:pathData="M0,78C24,71 44,82 66,76C80,72 94,72 108,75V108H0z" />
+</vector>

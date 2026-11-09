@@ -6,25 +6,22 @@ import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Surface
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -32,10 +29,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
+import androidx.core.graphics.drawable.toBitmap
 import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.data.Tips
 import com.asad.breaktime.service.BreakScheduler
@@ -58,13 +56,10 @@ class BlockActivity : ComponentActivity() {
         })
 
         val store = BreakStore.get(this)
-        val appName = intent.getStringExtra(EXTRA_PACKAGE)?.let { pkg ->
-            try {
-                packageManager.getApplicationLabel(packageManager.getApplicationInfo(pkg, 0)).toString()
-            } catch (e: Exception) {
-                null
-            }
-        }
+        val pkg = intent.getStringExtra(EXTRA_PACKAGE)
+        val info = pkg?.let { runCatching { packageManager.getApplicationInfo(it, 0) }.getOrNull() }
+        val appName = info?.let { packageManager.getApplicationLabel(it).toString() }
+        val appIcon = info?.let { runCatching { packageManager.getApplicationIcon(it).toBitmap(128, 128).asImageBitmap() }.getOrNull() }
 
         setContent {
             BreakTimeTheme {
@@ -81,86 +76,16 @@ class BlockActivity : ComponentActivity() {
                         delay(1000)
                     }
                 }
-
                 val endsAt = store.breakEndsAt
-                val total = (endsAt - store.breakStartedAt).coerceAtLeast(1L)
-                val remaining = endsAt - now
-                val endTime = remember(endsAt) {
-                    DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(endsAt))
-                }
-                val onBg = MaterialTheme.colorScheme.onPrimary
-
-                Column(
-                    Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primary)
-                        .statusBarsPadding()
-                        .navigationBarsPadding()
-                        .padding(horizontal = 28.dp, vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        "BREAKTIME",
-                        color = onBg.copy(alpha = 0.7f),
-                        style = MaterialTheme.typography.labelLarge,
-                        letterSpacing = 3.sp,
-                    )
-                    Spacer(Modifier.weight(1f))
-
-                    Text(
-                        if (appName != null) "$appName is paused" else "This app is paused",
-                        color = onBg,
-                        style = MaterialTheme.typography.headlineMedium,
-                        fontWeight = FontWeight.SemiBold,
-                        textAlign = TextAlign.Center,
-                    )
-                    Spacer(Modifier.height(8.dp))
-                    Text(
-                        "You're taking a break. It unlocks at $endTime.",
-                        color = onBg.copy(alpha = 0.85f),
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                    )
-
-                    Spacer(Modifier.height(32.dp))
-                    Box(contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator(
-                            progress = { (remaining.toFloat() / total).coerceIn(0f, 1f) },
-                            modifier = Modifier.size(220.dp),
-                            color = onBg,
-                            trackColor = onBg.copy(alpha = 0.2f),
-                            strokeWidth = 10.dp,
-                        )
-                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(formatRemaining(remaining), color = onBg, fontSize = 44.sp, fontWeight = FontWeight.Bold)
-                            Text("left", color = onBg.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
-                        }
-                    }
-                    Spacer(Modifier.height(32.dp))
-
-                    Surface(
-                        color = onBg.copy(alpha = 0.12f),
-                        shape = RoundedCornerShape(16.dp),
-                        modifier = Modifier.fillMaxWidth(),
-                    ) {
-                        Column(Modifier.padding(16.dp)) {
-                            Text("Instead, try this", color = onBg.copy(alpha = 0.7f), style = MaterialTheme.typography.labelLarge)
-                            Spacer(Modifier.height(4.dp))
-                            Text(tip, color = onBg, style = MaterialTheme.typography.titleMedium)
-                        }
-                    }
-
-                    Spacer(Modifier.weight(1f))
-                    Button(
-                        onClick = { goHome() },
-                        colors = ButtonDefaults.buttonColors(containerColor = onBg, contentColor = MaterialTheme.colorScheme.primary),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(56.dp),
-                    ) {
-                        Text("Back to my break", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
-                    }
-                }
+                LockedAppContent(
+                    appName = appName,
+                    appIcon = appIcon,
+                    endsAt = endsAt,
+                    fraction = (endsAt - now).toFloat() / (endsAt - store.breakStartedAt).coerceAtLeast(1L),
+                    remaining = endsAt - now,
+                    tip = tip,
+                    onBack = { goHome() },
+                )
             }
         }
     }
@@ -182,5 +107,57 @@ class BlockActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_PACKAGE = "package"
+    }
+}
+
+@Composable
+fun LockedAppContent(
+    appName: String?,
+    appIcon: ImageBitmap?,
+    endsAt: Long,
+    fraction: Float,
+    remaining: Long,
+    tip: String,
+    onBack: () -> Unit,
+) {
+    val endTime = remember(endsAt) { DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(endsAt)) }
+    Column(
+        Modifier
+            .fillMaxSize()
+            .background(Palette.Parchment)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .padding(horizontal = 20.dp),
+    ) {
+        BrandHeader { Pill("App paused", icon = Icons.Rounded.Lock) }
+        Column(
+            Modifier
+                .weight(1f)
+                .verticalScroll(rememberScrollState()),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Spacer(Modifier.height(16.dp))
+            if (appIcon != null) {
+                Image(
+                    appIcon, null,
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(12.dp)),
+                )
+                Spacer(Modifier.height(14.dp))
+            }
+            ScreenTitle(
+                if (appName != null) "$appName is paused" else "This app is paused",
+                "It unlocks at $endTime.",
+                centered = true,
+            )
+            Spacer(Modifier.height(20.dp))
+            CountdownRing(fraction, remaining)
+            Spacer(Modifier.height(24.dp))
+            TipCard("Instead, try this", tip)
+        }
+        Spacer(Modifier.height(12.dp))
+        PrimaryButton("Back to my break", onBack)
+        Spacer(Modifier.height(12.dp))
     }
 }

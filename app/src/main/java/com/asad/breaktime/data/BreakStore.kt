@@ -81,7 +81,9 @@ class BreakStore private constructor(context: Context) {
     fun finishIfDue(now: Long = System.currentTimeMillis()): Boolean {
         val end = breakEndsAt
         if (end == 0L || now < end) return false
-        addRecord(BreakRecord(breakStartedAt, breakMinutes, completed = true))
+        val minutes = breakMinutes
+        addRecord(BreakRecord(breakStartedAt, minutes, completed = true))
+        prefs.edit().putInt(KEY_CELEBRATE, minutes).apply()
         clearBreak()
         return true
     }
@@ -96,6 +98,14 @@ class BreakStore private constructor(context: Context) {
 
     private fun clearBreak() {
         prefs.edit().remove(KEY_END).remove(KEY_START).remove(KEY_MINUTES).apply()
+        changed()
+    }
+
+    /** Minutes of a just-finished break whose "Break complete" screen hasn't been shown yet (0 = none). */
+    val pendingCelebration: Int get() = prefs.getInt(KEY_CELEBRATE, 0)
+
+    fun clearCelebration() {
+        prefs.edit().remove(KEY_CELEBRATE).apply()
         changed()
     }
 
@@ -151,6 +161,7 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_MINUTES = "break_minutes"
         private const val KEY_HISTORY = "history"
         private const val KEY_ONBOARDED = "onboarding_done"
+        private const val KEY_CELEBRATE = "celebrate_minutes"
 
         /** Free plan limit. Premium (coming later) will remove it. */
         const val FREE_APP_LIMIT = 3

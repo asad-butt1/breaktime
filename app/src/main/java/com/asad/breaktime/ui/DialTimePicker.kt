@@ -47,7 +47,7 @@ fun DialTimePicker(
     minutes: Int,
     onMinutesChange: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    diameter: Dp = 260.dp,
+    diameter: Dp = 250.dp,
 ) {
     val haptic = LocalHapticFeedback.current
     val current by rememberUpdatedState(minutes)
@@ -55,10 +55,6 @@ fun DialTimePicker(
     var lastAngle by remember { mutableFloatStateOf(0f) }
     var exact by remember { mutableFloatStateOf(minutes.toFloat()) }
 
-    val primary = MaterialTheme.colorScheme.primary
-    val track = MaterialTheme.colorScheme.primaryContainer
-    val tick = MaterialTheme.colorScheme.outline
-    val knobFill = MaterialTheme.colorScheme.surface
 
     Box(
         modifier
@@ -100,73 +96,33 @@ fun DialTimePicker(
         contentAlignment = Alignment.Center,
     ) {
         Canvas(Modifier.fillMaxSize()) {
-            val stroke = 22.dp.toPx()
-            val radius = size.minDimension / 2f - stroke
-            val topLeft = Offset(center.x - radius, center.y - radius)
-            val arcSize = Size(radius * 2, radius * 2)
-
-            // Background ring
-            drawCircle(track, radius = radius, style = Stroke(stroke))
-
-            // Tick marks every 5 minutes (bigger every 15)
-            for (i in 0 until 12) {
-                val ang = Math.toRadians((i * 30 - 90).toDouble())
-                val outer = radius - stroke / 2f - 6.dp.toPx()
-                val len = if (i % 3 == 0) 12.dp.toPx() else 6.dp.toPx()
-                val c = cos(ang).toFloat()
-                val s = sin(ang).toFloat()
-                drawLine(
-                    tick,
-                    start = Offset(center.x + c * outer, center.y + s * outer),
-                    end = Offset(center.x + c * (outer - len), center.y + s * (outer - len)),
-                    strokeWidth = 2.dp.toPx(),
-                    cap = StrokeCap.Round,
-                )
-            }
-
-            // Completed hours show as a full softer ring underneath
             val hours = minutes / 60
             val rest = minutes % 60
-            if (hours > 0) {
-                drawCircle(primary.copy(alpha = 0.35f), radius = radius, style = Stroke(stroke))
-            }
-            val sweep = if (rest == 0 && hours > 0) 360f else rest * 6f
-            drawArc(
-                primary,
-                startAngle = -90f,
-                sweepAngle = sweep,
-                useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = Stroke(stroke, cap = StrokeCap.Round),
-            )
-
-            // Knob at the end of the arc
-            val knobAng = Math.toRadians((sweep - 90f).toDouble())
-            val knob = Offset(
-                center.x + cos(knobAng).toFloat() * radius,
-                center.y + sin(knobAng).toFloat() * radius,
-            )
-            drawCircle(primary, radius = stroke * 0.85f, center = knob)
-            drawCircle(knobFill, radius = stroke * 0.45f, center = knob)
+            val fraction = if (rest == 0 && hours > 0) 1f else rest / 60f
+            val (knob, _) = drawTimerRing(fraction, strokeDp = 12f)
+            val kr = 11.dp.toPx()
+            drawCircle(Palette.Card, radius = kr, center = knob)
+            drawCircle(Palette.Forest, radius = kr, center = knob, style = Stroke(2.dp.toPx()))
+            drawCircle(Palette.Forest, radius = kr * 0.35f, center = knob)
         }
 
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             val h = minutes / 60
             val m = minutes % 60
+            Eyebrow("Break length")
             Text(
                 if (h > 0) "%d:%02d".format(h, m) else "$m",
-                fontSize = 52.sp,
-                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.displayLarge,
+                color = Palette.DeepPine,
             )
             Text(
                 when {
                     h == 0 -> "minutes"
-                    h == 1 -> "hour : min"
-                    else -> "hours : min"
+                    h == 1 && m == 0 -> "hour"
+                    else -> "hours"
                 },
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall,
+                color = Palette.Muted,
             )
         }
     }

@@ -43,7 +43,7 @@ object BreakScheduler {
             notify(
                 context, NOTIF_DONE,
                 Notification.Builder(context, CHANNEL_DONE)
-                    .setSmallIcon(R.drawable.ic_launcher)
+                    .setSmallIcon(R.drawable.ic_notification)
                     .setContentTitle("Break complete. Nice work!")
                     .setContentText("Your apps are unlocked again.")
                     .setContentIntent(openAppIntent(context))
@@ -93,7 +93,7 @@ object BreakScheduler {
         notify(
             context, NOTIF_ONGOING,
             Notification.Builder(context, CHANNEL_TIMER)
-                .setSmallIcon(R.drawable.ic_launcher)
+                .setSmallIcon(R.drawable.ic_notification)
                 .setContentTitle("On a break")
                 .setContentText("Your apps are locked. Go enjoy some time offline.")
                 .setWhen(endsAt)
