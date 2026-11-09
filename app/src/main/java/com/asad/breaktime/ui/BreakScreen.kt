@@ -14,6 +14,8 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -406,7 +408,8 @@ fun TipCard(label: String, tip: String, modifier: Modifier = Modifier) {
     Row(
         modifier
             .fillMaxWidth()
-            .height(96.dp)
+            .height(IntrinsicSize.Min)
+            .heightIn(min = 96.dp)
             .clip(RoundedCornerShape(18.dp))
             .background(Palette.SoftSage),
     ) {
@@ -418,7 +421,7 @@ fun TipCard(label: String, tip: String, modifier: Modifier = Modifier) {
         ) {
             Eyebrow(label, color = Palette.Forest)
             Spacer(Modifier.height(4.dp))
-            Text(tip, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine, maxLines = 3)
+            Text(tip, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
         }
         Landscape(
             Modifier

@@ -264,7 +264,7 @@ private fun DrawScope.drawLandscape(sunX: Float, sunY: Float, showPath: Boolean,
     drawRect(Brush.verticalGradient(listOf(Color(0xFFD5ECEE), Color(0xFFF4F1D8), Color(0xFFF7EFCF))))
 
     val sun = Offset(w * sunX, h * sunY)
-    val r = minOf(w, h) * 0.2f
+    val r = minOf(w, h) * if (w > h * 1.4f) 0.2f else 0.15f
     drawCircle(Color(0xFFFBEFC6).copy(alpha = 0.7f), radius = r * 1.55f, center = sun)
     drawCircle(Palette.Sunlight, radius = r, center = sun)
 
