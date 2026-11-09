@@ -225,7 +225,7 @@ fun ScheduleEditContent(
             when {
                 days.isEmpty() -> "Pick at least one day."
                 start == end -> "Start and end can't be the same time."
-                else -> "Apps lock for ${formatDuration(draft.durationMinutes)}, ${Schedule.describeDays(days).lowercase()}."
+                else -> "Apps lock for ${formatDuration(draft.durationMinutes)}: ${Schedule.describeDays(days)}."
             },
             style = MaterialTheme.typography.bodySmall,
             color = if (days.isEmpty() || start == end) Palette.Danger else Palette.Muted,
