@@ -12,6 +12,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
@@ -108,7 +109,7 @@ fun BreakScreen(modifier: Modifier = Modifier, onPickApps: () -> Unit) {
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun StartBreak(lockedCount: Int, lockOn: Boolean, onPickApps: () -> Unit) {
+private fun ColumnScope.StartBreak(lockedCount: Int, lockOn: Boolean, onPickApps: () -> Unit) {
     val context = LocalContext.current
     var minutes by rememberSaveable { mutableIntStateOf(30) }
 
@@ -132,6 +133,19 @@ private fun StartBreak(lockedCount: Int, lockOn: Boolean, onPickApps: () -> Unit
     val isCustom = minutes !in PRESETS
 
     Text("How long?", style = MaterialTheme.typography.titleMedium)
+    DialTimePicker(
+        minutes = minutes,
+        onMinutesChange = { minutes = it },
+        modifier = Modifier.align(Alignment.CenterHorizontally),
+    )
+    Text(
+        "Drag around the circle. Each full lap adds an hour.",
+        style = MaterialTheme.typography.bodySmall,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth(),
+    )
+    Text("Quick picks", style = MaterialTheme.typography.titleSmall)
     FlowRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
