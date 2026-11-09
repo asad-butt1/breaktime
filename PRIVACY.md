@@ -28,4 +28,4 @@ BreakTime is not directed at children under 13 and does not knowingly collect da
 If this policy changes, we'll update this page and the date at the top.
 
 ## Contact
-Questions? Open an issue at [github.com/asad-butt1/breaktime/issues](https://github.com/asad-butt1/breaktime/issues).
+Questions? Email breaktime.asad@gmail.com.
