@@ -261,7 +261,7 @@ fun Landscape(
     modifier: Modifier = Modifier,
     sunX: Float = 0.62f,
     sunY: Float = 0.36f,
-    showPath: Boolean = true,
+    showPath: Boolean = false,
     showBirds: Boolean = true,
     overlay: @Composable BoxScope.() -> Unit = {},
 ) {
