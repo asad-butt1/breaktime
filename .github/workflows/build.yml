@@ -54,7 +54,7 @@ jobs:
           # Strip any spaces/line breaks that sneak in when pasting the secret.
           printf '%s' "$BT_KEYSTORE_BASE64" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/upload.jks" \
             || { echo "::error::BT_KEYSTORE_BASE64 isn't valid. Paste the whole contents of breaktime-upload.jks.base64.txt again."; exit 1; }
-          keytool -list -keystore "$RUNNER_TEMP/upload.jks" -storepass "$BT_KEYSTORE_PASSWORD" >/dev/null \
+          keytool -list -keystore "$RUNNER_TEMP/upload.jks" -storepass "$BT_KEYSTORE_PASSWORD" \
             || { echo "::error::The keystore or BT_KEYSTORE_PASSWORD is wrong."; exit 1; }
           export BT_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
           ./gradlew bundleRelease --no-daemon
