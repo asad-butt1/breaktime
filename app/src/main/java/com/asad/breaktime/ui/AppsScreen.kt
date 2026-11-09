@@ -44,6 +44,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.asImageBitmap
@@ -259,7 +260,14 @@ private fun AppRow(app: InstalledApp, checked: Boolean, onClick: () -> Unit) {
         if (app.icon != null) {
             Image(app.icon, null, Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)))
         } else {
-            Box(Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(Palette.SoftSage))
+            // Fallback when the app's icon can't be loaded: a coloured tile with its first letter.
+            val tints = listOf(Palette.Forest, Color(0xFF3F7F9A), Color(0xFFC0814A), Color(0xFF7A6BB0), Color(0xFFB45C6E), Color(0xFF4F8C6F))
+            Box(
+                Modifier.size(30.dp).clip(RoundedCornerShape(8.dp)).background(tints[Math.floorMod(app.label.hashCode(), tints.size)]),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(app.label.take(1).uppercase(), style = MaterialTheme.typography.labelLarge, color = Color.White)
+            }
         }
         Text(app.label, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine, modifier = Modifier.weight(1f))
         CheckBox(checked)
