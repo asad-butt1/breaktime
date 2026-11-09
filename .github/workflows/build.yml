@@ -27,6 +27,41 @@ jobs:
           name: BreakTime-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+  release:
+    # Builds the signed .aab for Google Play. Needs the BT_* secrets (see README).
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: Build signed release bundle (.aab)
+        env:
+          BT_KEYSTORE_BASE64: ${{ secrets.BT_KEYSTORE_BASE64 }}
+          BT_KEYSTORE_PASSWORD: ${{ secrets.BT_KEYSTORE_PASSWORD }}
+          BT_KEY_ALIAS: ${{ secrets.BT_KEY_ALIAS }}
+          BT_KEY_PASSWORD: ${{ secrets.BT_KEY_PASSWORD }}
+        run: |
+          if [ -z "$BT_KEYSTORE_BASE64" ]; then
+            echo "::warning::Signing secrets are not set yet, so no Play Store bundle was built. See README > Publishing."
+            exit 0
+          fi
+          echo "$BT_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export BT_KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+          ./gradlew bundleRelease --no-daemon
+
+      - name: Upload release bundle
+        uses: actions/upload-artifact@v6
+        with:
+          name: BreakTime-release-aab
+          path: app/build/outputs/bundle/release/app-release.aab
+          if-no-files-found: ignore
+
   screenshots:
     runs-on: ubuntu-24.04
     permissions:
@@ -55,7 +90,8 @@ jobs:
       - name: Publish screenshots to branch
         if: github.ref == 'refs/heads/main'
         run: |
-          mkdir /tmp/shots && cp app/src/test/snapshots/images/*.png /tmp/shots/
+          mkdir -p /tmp/shots/store && cp app/src/test/snapshots/images/*.png /tmp/shots/
+          cp app/build/store-shots/*.png /tmp/shots/store/ || true
           cd /tmp/shots
           git init -q -b screenshots
           git config user.name "github-actions"

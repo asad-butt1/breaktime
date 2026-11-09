@@ -64,6 +64,7 @@ class ScreensTest {
     @Test fun s01_welcome() = shot("01_welcome") { WelcomePage({}, {}) }
     @Test fun s02_how() = shot("02_how") { HowItWorksPage({}, {}) }
     @Test fun s03_setup() = shot("03_setup") { SetupPage(false, true, {}, {}, {}, {}, {}) }
+    @Test fun s03a_disclosure() = shot("03a_disclosure") { SetupPage(false, true, {}, {}, {}, {}, {}, consented = false) }
     @Test fun s03b_setup_on() = shot("03b_setup_on") { SetupPage(true, true, {}, {}, {}, {}, {}) }
 
     @Test fun s04_home() = shot("04_home") {

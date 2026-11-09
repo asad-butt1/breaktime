@@ -17,8 +17,22 @@ android {
         versionName = "0.6.0"
     }
 
+    // Release signing comes from environment variables (set as GitHub secrets in CI).
+    val keystorePath = System.getenv("BT_KEYSTORE_PATH")
+    signingConfigs {
+        if (keystorePath != null) {
+            create("release") {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("BT_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("BT_KEY_ALIAS")
+                keyPassword = System.getenv("BT_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = false
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

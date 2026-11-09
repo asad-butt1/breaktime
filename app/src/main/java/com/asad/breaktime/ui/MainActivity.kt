@@ -90,6 +90,8 @@ private fun MainApp(store: BreakStore) {
                 onDone = { overlay = Overlay.None },
                 onLater = { overlay = Overlay.None },
                 inOnboarding = false,
+                consented = setup.consented,
+                onConsent = setup.consent,
             )
         }
         overlay == Overlay.Premium -> PremiumContent(

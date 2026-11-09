@@ -57,6 +57,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.service.BlockerService
 import kotlinx.coroutines.delay
 
@@ -80,6 +81,8 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             onBack = { page = 1 },
             onDone = onFinish,
             onLater = onFinish,
+            consented = setup.consented,
+            onConsent = setup.consent,
         )
     }
 }
@@ -228,6 +231,8 @@ fun SetupPage(
     onDone: () -> Unit,
     onLater: () -> Unit,
     inOnboarding: Boolean = true,
+    consented: Boolean = true,
+    onConsent: () -> Unit = {},
 ) {
     OnboardingFrame(
         pageIndex = if (inOnboarding) 2 else null,
@@ -241,7 +246,7 @@ fun SetupPage(
             }
         },
     ) {
-        SetupContent(lockOn, restricted, onOpenAccessibility, onOpenAppInfo)
+        SetupContent(lockOn, restricted, onOpenAccessibility, onOpenAppInfo, consented, onConsent, onLater)
     }
 }
 
@@ -252,11 +257,18 @@ fun SetupContent(
     restricted: Boolean,
     onOpenAccessibility: () -> Unit,
     onOpenAppInfo: () -> Unit,
+    consented: Boolean = true,
+    onConsent: () -> Unit = {},
+    onDecline: () -> Unit = {},
 ) {
     ScreenTitle("Set up app lock", "Allow Android Accessibility so BreakTime can tell which app you open.")
     Spacer(Modifier.height(16.dp))
     if (lockOn) {
         LockOnCard()
+        return
+    }
+    if (!consented) {
+        DisclosureCard(onAgree = onConsent, onDecline = onDecline)
         return
     }
     Row(
@@ -312,6 +324,44 @@ fun SetupContent(
     }
 }
 
+/**
+ * Google Play "prominent disclosure": explains the Accessibility use and asks for
+ * consent before the user is sent to Accessibility settings.
+ */
+@Composable
+fun DisclosureCard(onAgree: () -> Unit, onDecline: () -> Unit) {
+    AppCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                IconTile(Icons.Rounded.VerifiedUser, container = Palette.MorningSky, size = 36.dp)
+                Text("Before you continue", style = MaterialTheme.typography.titleMedium, color = Palette.DeepPine)
+            }
+            Text(
+                "BreakTime uses Android's Accessibility Service API to lock the apps you choose during a break.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = Palette.DeepPine,
+            )
+            DisclosurePoint("What it uses", "Only the name of the app you open (for example, \"Instagram\"), so BreakTime can show the break screen over apps you've chosen to lock while a break is running.")
+            DisclosurePoint("What it never does", "It doesn't read what's on your screen, your messages, passwords or anything you type.")
+            DisclosurePoint("Your data", "Nothing is collected, shared or sent anywhere. Everything stays on this phone.")
+            DisclosurePoint("Your choice", "You can turn it off any time in Settings → Accessibility.")
+            Spacer(Modifier.height(4.dp))
+            PrimaryButton("Agree and continue", onAgree)
+            TextButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) {
+                Text("No thanks", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
+            }
+        }
+    }
+}
+
+@Composable
+private fun DisclosurePoint(title: String, body: String) {
+    Column {
+        Text(title, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
+        Text(body, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
+    }
+}
+
 @Composable
 private fun LockOnCard() {
     Column(
@@ -361,6 +411,8 @@ private fun LinkPill(text: String, onClick: () -> Unit) {
 class SetupState(
     val lockOn: Boolean,
     val restricted: Boolean,
+    val consented: Boolean,
+    val consent: () -> Unit,
     val openAccessibility: () -> Unit,
     val openAppInfo: () -> Unit,
 )
@@ -377,9 +429,16 @@ fun rememberSetupState(): SetupState {
         }
     }
     val restricted = remember { Build.VERSION.SDK_INT >= 33 && !installedFromPlayStore(context) }
+    val store = remember { BreakStore.get(context) }
+    var consented by remember { mutableStateOf(store.accessibilityConsent) }
     return SetupState(
         lockOn = lockOn,
         restricted = restricted,
+        consented = consented,
+        consent = {
+            store.accessibilityConsent = true
+            consented = true
+        },
         openAccessibility = {
             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
         },

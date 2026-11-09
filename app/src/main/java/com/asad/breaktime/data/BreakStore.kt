@@ -44,6 +44,14 @@ class BreakStore private constructor(context: Context) {
             changed()
         }
 
+    /** User agreed to the Accessibility disclosure (required by Google Play before opening settings). */
+    var accessibilityConsent: Boolean
+        get() = prefs.getBoolean(KEY_CONSENT, false)
+        set(value) {
+            prefs.edit().putBoolean(KEY_CONSENT, value).apply()
+            changed()
+        }
+
     // ---- Locked apps ----
 
     var lockedApps: Set<String>
@@ -161,6 +169,7 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_MINUTES = "break_minutes"
         private const val KEY_HISTORY = "history"
         private const val KEY_ONBOARDED = "onboarding_done"
+        private const val KEY_CONSENT = "accessibility_consent"
         private const val KEY_CELEBRATE = "celebrate_minutes"
 
         /** Free plan limit. Premium (coming later) will remove it. */
