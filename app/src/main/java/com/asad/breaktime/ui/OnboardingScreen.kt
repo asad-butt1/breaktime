@@ -121,7 +121,7 @@ private fun HowItWorks() {
     Text("How it works", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.SemiBold)
     Spacer(Modifier.height(8.dp))
     HowRow("📱", "Pick your distracting apps", "Instagram, TikTok, YouTube, ChatGPT, whatever pulls you in.")
-    HowRow("⏱️", "Set a break timer", "From 5 minutes to 4 hours.")
+    HowRow("⏱️", "Set a break timer", "Pick a quick preset or set your own time.")
     HowRow("🔒", "Those apps stay locked", "If you open one, BreakTime gently reminds you you're on a break.")
     HowRow("🚶", "Go outside, breathe, reset", "You'll get ideas for what to do instead.")
     HowRow("🔓", "Apps unlock when time's up", "We'll send you a notification. Build a daily streak.")

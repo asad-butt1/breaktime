@@ -7,7 +7,7 @@ While they're locked, BreakTime suggests things to do offline, like a short walk
 ## What's in this first version (free plan)
 
 - **Choose apps to lock** (up to 3 on the free plan). Popular apps like Instagram, TikTok, YouTube and ChatGPT appear at the top.
-- **Break timer**: 15 min, 30 min, 45 min, 1 hr, 2 hr, or any length from 5 minutes to 4 hours.
+- **Break timer**: 15 min, 30 min, 45 min, 1 hr, 2 hr, or a custom time up to 12 hours.
 - **Lock screen**: opening a locked app during a break shows a calm screen with the time left and an offline suggestion.
 - **Unlock + notification** when the timer ends. A countdown also shows in the notification bar.
 - **Progress**: day streak, number of breaks, hours offline, and a history list.

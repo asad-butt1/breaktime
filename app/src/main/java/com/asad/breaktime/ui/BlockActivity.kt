@@ -5,6 +5,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +14,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +40,8 @@ import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.data.Tips
 import com.asad.breaktime.service.BreakScheduler
 import kotlinx.coroutines.delay
+import java.text.DateFormat
+import java.util.Date
 
 /**
  * Shown on top of a locked app during a break. There's no way back into the
@@ -41,6 +52,7 @@ class BlockActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() = goHome()
         })
@@ -70,34 +82,83 @@ class BlockActivity : ComponentActivity() {
                     }
                 }
 
+                val endsAt = store.breakEndsAt
+                val total = (endsAt - store.breakStartedAt).coerceAtLeast(1L)
+                val remaining = endsAt - now
+                val endTime = remember(endsAt) {
+                    DateFormat.getTimeInstance(DateFormat.SHORT).format(Date(endsAt))
+                }
+                val onBg = MaterialTheme.colorScheme.onPrimary
+
                 Column(
                     Modifier
                         .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.primaryContainer)
-                        .padding(32.dp),
+                        .background(MaterialTheme.colorScheme.primary)
+                        .statusBarsPadding()
+                        .navigationBarsPadding()
+                        .padding(horizontal = 28.dp, vertical = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
                 ) {
-                    Text("🌿", fontSize = 64.sp)
-                    Spacer(Modifier.height(16.dp))
                     Text(
-                        if (appName != null) "$appName is locked" else "This app is locked",
-                        style = MaterialTheme.typography.headlineSmall,
+                        "BREAKTIME",
+                        color = onBg.copy(alpha = 0.7f),
+                        style = MaterialTheme.typography.labelLarge,
+                        letterSpacing = 3.sp,
+                    )
+                    Spacer(Modifier.weight(1f))
+
+                    Text(
+                        if (appName != null) "$appName is paused" else "This app is paused",
+                        color = onBg,
+                        style = MaterialTheme.typography.headlineMedium,
                         fontWeight = FontWeight.SemiBold,
                         textAlign = TextAlign.Center,
                     )
                     Spacer(Modifier.height(8.dp))
-                    Text("You're on a break. Time left:", textAlign = TextAlign.Center)
                     Text(
-                        formatRemaining(store.breakEndsAt - now),
-                        fontSize = 56.sp,
-                        fontWeight = FontWeight.Bold,
+                        "You're taking a break. It unlocks at $endTime.",
+                        color = onBg.copy(alpha = 0.85f),
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
                     )
-                    Spacer(Modifier.height(24.dp))
-                    Text(tip, style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
+
                     Spacer(Modifier.height(32.dp))
-                    Button(onClick = { goHome() }, modifier = Modifier.fillMaxWidth()) {
-                        Text("OK, I'll take a break")
+                    Box(contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(
+                            progress = { (remaining.toFloat() / total).coerceIn(0f, 1f) },
+                            modifier = Modifier.size(220.dp),
+                            color = onBg,
+                            trackColor = onBg.copy(alpha = 0.2f),
+                            strokeWidth = 10.dp,
+                        )
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(formatRemaining(remaining), color = onBg, fontSize = 44.sp, fontWeight = FontWeight.Bold)
+                            Text("left", color = onBg.copy(alpha = 0.7f), style = MaterialTheme.typography.bodyMedium)
+                        }
+                    }
+                    Spacer(Modifier.height(32.dp))
+
+                    Surface(
+                        color = onBg.copy(alpha = 0.12f),
+                        shape = RoundedCornerShape(16.dp),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(16.dp)) {
+                            Text("Instead, try this", color = onBg.copy(alpha = 0.7f), style = MaterialTheme.typography.labelLarge)
+                            Spacer(Modifier.height(4.dp))
+                            Text(tip, color = onBg, style = MaterialTheme.typography.titleMedium)
+                        }
+                    }
+
+                    Spacer(Modifier.weight(1f))
+                    Button(
+                        onClick = { goHome() },
+                        colors = ButtonDefaults.buttonColors(containerColor = onBg, contentColor = MaterialTheme.colorScheme.primary),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(56.dp),
+                    ) {
+                        Text("Back to my break", fontSize = 17.sp, fontWeight = FontWeight.SemiBold)
                     }
                 }
             }

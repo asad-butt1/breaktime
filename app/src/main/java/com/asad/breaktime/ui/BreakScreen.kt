@@ -28,7 +28,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Slider
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -55,7 +55,9 @@ import com.asad.breaktime.data.Tips
 import com.asad.breaktime.service.BlockerService
 import com.asad.breaktime.service.BreakScheduler
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.input.KeyboardType
 
 private val PRESETS = listOf(15, 30, 45, 60, 120)
 
@@ -126,22 +128,38 @@ private fun StartBreak(lockedCount: Int, lockOn: Boolean, onPickApps: () -> Unit
         return
     }
 
+    var showCustom by remember { mutableStateOf(false) }
+    val isCustom = minutes !in PRESETS
+
     Text("How long?", style = MaterialTheme.typography.titleMedium)
-    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    FlowRow(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
         PRESETS.forEach { p ->
             FilterChip(
                 selected = minutes == p,
                 onClick = { minutes = p },
-                label = { Text(if (p < 60) "$p min" else "${p / 60} hr") },
+                label = { Text(formatDuration(p)) },
             )
         }
+        FilterChip(
+            selected = isCustom,
+            onClick = { showCustom = true },
+            label = { Text(if (isCustom) "Custom: ${formatDuration(minutes)}" else "Custom") },
+        )
     }
-    Text("Or choose exactly: $minutes minutes", style = MaterialTheme.typography.bodyMedium)
-    Slider(
-        value = minutes.toFloat(),
-        onValueChange = { minutes = (it / 5).roundToInt() * 5 },
-        valueRange = 5f..240f,
-    )
+
+    if (showCustom) {
+        CustomTimeDialog(
+            initialMinutes = minutes,
+            onDismiss = { showCustom = false },
+            onConfirm = {
+                minutes = it
+                showCustom = false
+            },
+        )
+    }
 
     Button(
         onClick = {
@@ -154,7 +172,7 @@ private fun StartBreak(lockedCount: Int, lockOn: Boolean, onPickApps: () -> Unit
             .fillMaxWidth()
             .height(56.dp),
     ) {
-        Text("Start break", fontSize = 18.sp)
+        Text("Start ${formatDuration(minutes)} break", fontSize = 18.sp)
     }
     Text(
         if (lockOn) "$lockedCount app${if (lockedCount == 1) "" else "s"} will be locked."
@@ -238,4 +256,62 @@ private fun Context.findActivity(): Activity? {
         c = c.baseContext
     }
     return null
+}
+
+/** 45 -> "45 min", 60 -> "1 hr", 90 -> "1 hr 30 min". */
+fun formatDuration(minutes: Int): String {
+    val h = minutes / 60
+    val m = minutes % 60
+    return when {
+        h == 0 -> "$m min"
+        m == 0 -> "$h hr"
+        else -> "$h hr $m min"
+    }
+}
+
+private const val MAX_MINUTES = 12 * 60
+
+@Composable
+private fun CustomTimeDialog(initialMinutes: Int, onDismiss: () -> Unit, onConfirm: (Int) -> Unit) {
+    var hours by remember { mutableStateOf((initialMinutes / 60).toString()) }
+    var mins by remember { mutableStateOf((initialMinutes % 60).toString()) }
+    val total = (hours.toIntOrNull() ?: 0) * 60 + (mins.toIntOrNull() ?: 0)
+    val valid = total in 1..MAX_MINUTES
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Custom break") },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    OutlinedTextField(
+                        value = hours,
+                        onValueChange = { v -> hours = v.filter { it.isDigit() }.take(2) },
+                        label = { Text("Hours") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = mins,
+                        onValueChange = { v -> mins = v.filter { it.isDigit() }.take(3) },
+                        label = { Text("Minutes") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                Text(
+                    if (valid) "Break length: ${formatDuration(total)}"
+                    else "Choose between 1 minute and 12 hours.",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (valid) MaterialTheme.colorScheme.onSurfaceVariant else MaterialTheme.colorScheme.error,
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(total) }, enabled = valid) { Text("Set") }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+    )
 }
