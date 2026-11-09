@@ -29,6 +29,8 @@ jobs:
 
   screenshots:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v5
 
@@ -48,3 +50,15 @@ jobs:
         with:
           name: screenshots
           path: app/src/test/snapshots/images/
+
+      # Also keep the latest screenshots on a "screenshots" branch so they're easy to browse on GitHub.
+      - name: Publish screenshots to branch
+        if: github.ref == 'refs/heads/main'
+        run: |
+          mkdir /tmp/shots && cp app/src/test/snapshots/images/*.png /tmp/shots/
+          cd /tmp/shots
+          git init -q -b screenshots
+          git config user.name "github-actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git add . && git commit -qm "Screenshots for ${GITHUB_SHA::7}"
+          git push -qf "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}" screenshots
