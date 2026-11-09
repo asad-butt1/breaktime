@@ -51,7 +51,10 @@ jobs:
             echo "::warning::Signing secrets are not set yet, so no Play Store bundle was built. See README > Publishing."
             exit 0
           fi
-          # Strip any spaces/line breaks that sneak in when pasting the secret.
+          # Strip any spaces/line breaks that sneak in when pasting the secrets.
+          export BT_KEYSTORE_PASSWORD=$(printf '%s' "$BT_KEYSTORE_PASSWORD" | tr -d ' \r\n\t')
+          export BT_KEY_PASSWORD=$(printf '%s' "$BT_KEY_PASSWORD" | tr -d ' \r\n\t')
+          export BT_KEY_ALIAS=$(printf '%s' "$BT_KEY_ALIAS" | tr -d ' \r\n\t')
           printf '%s' "$BT_KEYSTORE_BASE64" | tr -d ' \r\n\t' | base64 -d > "$RUNNER_TEMP/upload.jks" \
             || { echo "::error::BT_KEYSTORE_BASE64 isn't valid. Paste the whole contents of breaktime-upload.jks.base64.txt again."; exit 1; }
           keytool -list -keystore "$RUNNER_TEMP/upload.jks" -storepass "$BT_KEYSTORE_PASSWORD" \
