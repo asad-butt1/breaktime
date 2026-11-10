@@ -1,5 +1,8 @@
 package com.asad.breaktime.ui
 
+import android.widget.Toast
+import android.os.Bundle
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -440,7 +443,16 @@ fun rememberSetupState(): SetupState {
             consented = true
         },
         openAccessibility = {
-            context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            store.awaitingLockSetupAt = System.currentTimeMillis()
+            // The ":settings:" extras make many phones (Pixel, Samsung, ...) scroll to and highlight
+            // BreakTime in the list. Phones that don't support them just open the normal list.
+            val key = ComponentName(context, BlockerService::class.java).flattenToString()
+            val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                .putExtra(":settings:fragment_args_key", key)
+                .putExtra(":settings:show_fragment_args", Bundle().apply { putString(":settings:fragment_args_key", key) })
+            context.startActivity(intent)
+            Toast.makeText(context, "Find BreakTime (it may be under Installed apps) and turn it on", Toast.LENGTH_LONG).show()
         },
         openAppInfo = {
             context.startActivity(

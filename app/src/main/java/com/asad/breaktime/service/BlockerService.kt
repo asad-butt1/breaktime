@@ -8,6 +8,7 @@ import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.ui.BlockActivity
+import com.asad.breaktime.ui.MainActivity
 
 /**
  * Notices when a locked app comes to the front during a break and covers it
@@ -29,6 +30,20 @@ class BlockerService : AccessibilityService() {
                 Intent(this, BlockActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     .putExtra(BlockActivity.EXTRA_PACKAGE, pkg)
+            )
+        }
+    }
+
+    /** Called when the user switches the service on. If they came from our setup screen, bring them back. */
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        val store = BreakStore.get(this)
+        val sentAt = store.awaitingLockSetupAt
+        store.awaitingLockSetupAt = 0L
+        if (sentAt > 0L && System.currentTimeMillis() - sentAt < 15 * 60_000L) {
+            startActivity(
+                Intent(this, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_REORDER_TO_FRONT)
             )
         }
     }

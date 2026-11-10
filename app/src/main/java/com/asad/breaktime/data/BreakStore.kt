@@ -52,6 +52,13 @@ class BreakStore private constructor(context: Context) {
             changed()
         }
 
+    /** When the user was last sent to Accessibility settings (0 = not waiting). Lets us bring them back. */
+    var awaitingLockSetupAt: Long
+        get() = prefs.getLong(KEY_AWAIT_SETUP, 0L)
+        set(value) {
+            prefs.edit().putLong(KEY_AWAIT_SETUP, value).apply()
+        }
+
     // ---- Premium ----
 
     /** Cached from Google Play Billing (refreshed every time the app opens). */
@@ -219,6 +226,7 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_CONSENT = "accessibility_consent"
         private const val KEY_CELEBRATE = "celebrate_minutes"
         private const val KEY_PREMIUM = "premium"
+        private const val KEY_AWAIT_SETUP = "await_setup"
         private const val KEY_SCHEDULES = "schedules"
         private const val KEY_LAST_AUTO = "last_auto_start"
         private const val KEY_STRICT = "strict_mode"
