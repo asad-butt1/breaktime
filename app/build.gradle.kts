@@ -7,14 +7,14 @@ plugins {
 
 android {
     namespace = "com.asad.breaktime"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.asad.breaktime"
         minSdk = 26
-        targetSdk = 35
-        versionCode = 8
-        versionName = "0.8.0"
+        targetSdk = 36
+        versionCode = 9
+        versionName = "0.8.1"
 
         // AdMob. The App ID is always the real BreakTime one (it only identifies the app).
         // The ad unit is Google's TEST unit unless USE_REAL_ADS is true, so testers never
@@ -68,7 +68,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.ui:ui-tooling-preview")
-    implementation("com.android.billingclient:billing:7.1.1")
+    implementation("com.android.billingclient:billing:8.0.0")
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.google.android.ump:user-messaging-platform:3.1.0")
     debugImplementation("androidx.compose.ui:ui-tooling")

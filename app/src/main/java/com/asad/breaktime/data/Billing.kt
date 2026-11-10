@@ -81,9 +81,9 @@ object Billing {
                 )
             )
             .build()
-        c.queryProductDetailsAsync(params) { result, list ->
+        c.queryProductDetailsAsync(params) { result, found ->
             if (result.responseCode != BillingResponseCode.OK) return@queryProductDetailsAsync
-            val pd = list.firstOrNull() ?: return@queryProductDetailsAsync
+            val pd = found.productDetailsList.firstOrNull() ?: return@queryProductDetailsAsync
             details = pd
             _prices.value = PremiumPrices(
                 monthly = basePrice(pd, PLAN_MONTHLY),
