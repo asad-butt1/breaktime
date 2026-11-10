@@ -145,7 +145,9 @@ fun PremiumContent(
     prices: PremiumPrices? = null,
     isPremium: Boolean = false,
     onPrivacyChoices: (() -> Unit)? = null,
+    onRedeemCode: ((String) -> Boolean)? = null,
 ) {
+    var showCode by remember { mutableStateOf(false) }
     var yearly by remember { mutableStateOf(true) }
     Column(
         Modifier
@@ -219,6 +221,14 @@ fun PremiumContent(
         TextButton(onClick = onRestore, modifier = Modifier.fillMaxWidth()) {
             Text("Restore purchase", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
         }
+        if (onRedeemCode != null && !isPremium) {
+            TextButton(onClick = { showCode = true }, modifier = Modifier.fillMaxWidth()) {
+                Text("Have a code?", style = MaterialTheme.typography.labelMedium, color = Palette.Muted)
+            }
+        }
+        if (showCode && onRedeemCode != null) {
+            RedeemCodeDialog(onRedeem = onRedeemCode, onDismiss = { showCode = false })
+        }
         if (onPrivacyChoices != null) {
             TextButton(onClick = onPrivacyChoices, modifier = Modifier.fillMaxWidth()) {
                 Text("Ad privacy choices", style = MaterialTheme.typography.labelMedium, color = Palette.Muted)
@@ -259,4 +269,36 @@ private fun PlanOption(name: String, price: String, bestValue: Boolean, selected
         Spacer(Modifier.weight(1f))
         Text(price, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
     }
+}
+
+@Composable
+private fun RedeemCodeDialog(onRedeem: (String) -> Boolean, onDismiss: () -> Unit) {
+    var code by remember { mutableStateOf("") }
+    var error by remember { mutableStateOf(false) }
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Palette.Parchment,
+        title = { Text("Enter code", color = Palette.DeepPine) },
+        text = {
+            Column {
+                androidx.compose.material3.OutlinedTextField(
+                    value = code,
+                    onValueChange = { code = it; error = false },
+                    singleLine = true,
+                    placeholder = { Text("Code") },
+                    isError = error,
+                )
+                if (error) {
+                    Spacer(Modifier.height(6.dp))
+                    Text("That code isn't valid.", style = MaterialTheme.typography.bodySmall, color = Palette.Danger)
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = { if (onRedeem(code)) onDismiss() else error = true }) {
+                Text("Unlock", color = Palette.Forest)
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel", color = Palette.Muted) } },
+    )
 }

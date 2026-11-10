@@ -69,13 +69,26 @@ class BreakStore private constructor(context: Context) {
     // ---- Premium ----
 
     /** Cached from Google Play Billing (refreshed every time the app opens). */
+    /** Premium from a Google Play subscription, or unlocked with a code (e.g. for Google's reviewers). */
     var isPremium: Boolean
-        get() = prefs.getBoolean(KEY_PREMIUM, false)
+        get() = prefs.getBoolean(KEY_PREMIUM, false) || prefs.getBoolean(KEY_CODE_UNLOCK, false)
         set(value) {
-            if (value == isPremium) return
+            if (value == prefs.getBoolean(KEY_PREMIUM, false)) return
             prefs.edit().putBoolean(KEY_PREMIUM, value).apply()
             changed()
         }
+
+    /** Unlocks Premium if [code] is a valid unlock code. Only a hash of the code is in the app. */
+    fun redeemCode(code: String): Boolean {
+        val normalized = code.trim().uppercase().replace(" ", "")
+        val hash = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(normalized.toByteArray())
+            .joinToString("") { "%02x".format(it) }
+        if (hash !in UNLOCK_CODE_HASHES) return false
+        prefs.edit().putBoolean(KEY_CODE_UNLOCK, true).apply()
+        changed()
+        return true
+    }
 
     /** How many apps the user may lock. */
     val appLimit: Int get() = if (isPremium) Int.MAX_VALUE else FREE_APP_LIMIT
@@ -233,6 +246,12 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_CONSENT = "accessibility_consent"
         private const val KEY_CELEBRATE = "celebrate_minutes"
         private const val KEY_PREMIUM = "premium"
+        private const val KEY_CODE_UNLOCK = "premium_code"
+
+        /** SHA-256 of valid Premium unlock codes (the codes themselves are kept private, not in this repo). */
+        private val UNLOCK_CODE_HASHES = setOf(
+            "b171228b0d998dcfeaebb19e15ad9231de20725443c725d81edbc159775303d5", // Google Play review
+        )
         private const val KEY_LAST_MINUTES = "last_minutes"
         private const val KEY_AWAIT_SETUP = "await_setup"
         private const val KEY_SCHEDULES = "schedules"

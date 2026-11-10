@@ -124,6 +124,11 @@ private fun MainApp(store: BreakStore) {
                 },
                 prices = prices,
                 isPremium = premium,
+                onRedeemCode = { code ->
+                    store.redeemCode(code).also { ok ->
+                        if (ok) Toast.makeText(context, "Premium unlocked", Toast.LENGTH_SHORT).show()
+                    }
+                },
                 onPrivacyChoices = context.findActivity()
                     ?.takeIf { !premium && Ads.privacyOptionsRequired(it) }
                     ?.let { a -> { Ads.showPrivacyOptions(a) } },
