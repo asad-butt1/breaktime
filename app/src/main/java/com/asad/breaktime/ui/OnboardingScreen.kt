@@ -264,7 +264,7 @@ fun SetupContent(
     onConsent: () -> Unit = {},
     onDecline: () -> Unit = {},
 ) {
-    ScreenTitle("Set up app lock", "Allow Android Accessibility so BreakTime can tell which app you open.")
+    ScreenTitle("Set up app lock", "One quick permission lets BreakTime pause the apps you choose.")
     Spacer(Modifier.height(16.dp))
     if (lockOn) {
         LockOnCard()
@@ -337,22 +337,29 @@ fun DisclosureCard(onAgree: () -> Unit, onDecline: () -> Unit) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 IconTile(Icons.Rounded.VerifiedUser, container = Palette.MorningSky, size = 36.dp)
-                Text("Before you continue", style = MaterialTheme.typography.titleMedium, color = Palette.DeepPine)
+                Text("Why BreakTime needs this", style = MaterialTheme.typography.titleMedium, color = Palette.DeepPine)
             }
             Text(
-                "BreakTime uses Android's Accessibility Service API to lock the apps you choose during a break.",
+                "To pause apps like Instagram during your break, BreakTime needs one Android permission called Accessibility. Without it, BreakTime can't lock any apps.",
                 style = MaterialTheme.typography.bodyMedium,
                 color = Palette.DeepPine,
             )
-            DisclosurePoint("What it uses", "Only the name of the app you open (for example, \"Instagram\"), so BreakTime can show the break screen over apps you've chosen to lock while a break is running.")
-            DisclosurePoint("What it never does", "It doesn't read what's on your screen, your messages, passwords or anything you type.")
-            DisclosurePoint("Your data", "Nothing is collected, shared or sent anywhere. Everything stays on this phone.")
-            DisclosurePoint("Your choice", "You can turn it off any time in Settings → Accessibility.")
+            DisclosurePoint("What it sees", "Only which app you open, like \"Instagram\". That's how it knows when to show the break screen.")
+            DisclosurePoint("What it never sees", "What's on your screen, your messages, passwords or anything you type.")
+            DisclosurePoint("Your privacy", "This stays on your phone. It's never saved or sent anywhere.")
+            DisclosurePoint("You're in control", "You can turn it off any time in your phone's Settings.")
             Spacer(Modifier.height(4.dp))
             PrimaryButton("Agree and continue", onAgree)
             TextButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) {
-                Text("No thanks", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
+                Text("Not now", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
             }
+            Text(
+                "If you choose Not now, you can still look around, but apps won't be locked until you allow it. You can do it later from the home screen.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Palette.Muted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }

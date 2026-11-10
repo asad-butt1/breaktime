@@ -140,13 +140,18 @@ fun BreakScreen(
             )
         }
     } else {
-        var minutes by rememberSaveable { mutableIntStateOf(30) }
+        // Remembered in storage so switching tabs (e.g. to pick apps) keeps the chosen length.
+        var minutes by remember { mutableIntStateOf(store.lastMinutes) }
+        val setMinutes = { m: Int ->
+            minutes = m
+            store.lastMinutes = m
+        }
         var showCustom by remember { mutableStateOf(false) }
         HomeContent(
             greeting = greeting(),
             streak = streak,
             minutes = minutes,
-            onMinutesChange = { minutes = it },
+            onMinutesChange = setMinutes,
             onCustom = { showCustom = true },
             lockedCount = lockedCount,
             lockOn = lockOn,
@@ -173,7 +178,7 @@ fun BreakScreen(
                 initialMinutes = minutes,
                 onDismiss = { showCustom = false },
                 onSet = {
-                    minutes = it
+                    setMinutes(it)
                     showCustom = false
                 },
             )

@@ -59,6 +59,13 @@ class BreakStore private constructor(context: Context) {
             prefs.edit().putLong(KEY_AWAIT_SETUP, value).apply()
         }
 
+    /** Break length last picked on the home screen. */
+    var lastMinutes: Int
+        get() = prefs.getInt(KEY_LAST_MINUTES, 30)
+        set(value) {
+            prefs.edit().putInt(KEY_LAST_MINUTES, value).apply()
+        }
+
     // ---- Premium ----
 
     /** Cached from Google Play Billing (refreshed every time the app opens). */
@@ -226,6 +233,7 @@ class BreakStore private constructor(context: Context) {
         private const val KEY_CONSENT = "accessibility_consent"
         private const val KEY_CELEBRATE = "celebrate_minutes"
         private const val KEY_PREMIUM = "premium"
+        private const val KEY_LAST_MINUTES = "last_minutes"
         private const val KEY_AWAIT_SETUP = "await_setup"
         private const val KEY_SCHEDULES = "schedules"
         private const val KEY_LAST_AUTO = "last_auto_start"
