@@ -353,13 +353,7 @@ fun DisclosureCard(onAgree: () -> Unit, onDecline: () -> Unit) {
             TextButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) {
                 Text("Not now", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
             }
-            Text(
-                "If you choose Not now, you can still look around, but apps won't be locked until you allow it. You can do it later from the home screen.",
-                style = MaterialTheme.typography.bodySmall,
-                color = Palette.Muted,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth(),
-            )
+
         }
     }
 }
