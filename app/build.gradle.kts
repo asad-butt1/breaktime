@@ -16,10 +16,13 @@ android {
         versionCode = 8
         versionName = "0.8.0"
 
-        // AdMob IDs. These are Google's official TEST IDs (safe to click, earn nothing).
-        // Replace with the real ones from the BreakTime AdMob account before launch.
-        manifestPlaceholders["admobAppId"] = "ca-app-pub-3940256099942544~3347511713"
-        buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"ca-app-pub-3940256099942544/1033173712\"")
+        // AdMob. The App ID is always the real BreakTime one (it only identifies the app).
+        // The ad unit is Google's TEST unit unless USE_REAL_ADS is true, so testers never
+        // see or click real ads. Flip USE_REAL_ADS to true only for the public production release.
+        manifestPlaceholders["admobAppId"] = "ca-app-pub-3984378567292938~4464314911"
+        val useRealAds = false
+        val adUnit = if (useRealAds) "ca-app-pub-3984378567292938/5077403488" else "ca-app-pub-3940256099942544/1033173712"
+        buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$adUnit\"")
     }
 
     // Release signing comes from environment variables (set as GitHub secrets in CI).
