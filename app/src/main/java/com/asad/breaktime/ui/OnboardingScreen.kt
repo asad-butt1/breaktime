@@ -241,10 +241,13 @@ fun SetupPage(
         pageIndex = if (inOnboarding) 2 else null,
         onBack = onBack,
         bottom = {
-            PrimaryButton(if (inOnboarding) "Get started" else "Done", onDone)
-            if (!lockOn && inOnboarding) {
-                TextButton(onClick = onLater, modifier = Modifier.fillMaxWidth()) {
-                    Text("I'll do this later", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
+            // While the permission explanation is showing, its own two buttons are the only choices.
+            if (consented || lockOn) {
+                PrimaryButton(if (inOnboarding) "Get started" else "Done", onDone)
+                if (!lockOn && inOnboarding) {
+                    TextButton(onClick = onLater, modifier = Modifier.fillMaxWidth()) {
+                        Text("I'll do this later", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
+                    }
                 }
             }
         },
