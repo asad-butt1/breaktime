@@ -84,7 +84,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@v5
 
       - name: Render every screen
-        run: ./gradlew :app:recordPaparazziDebug --no-daemon
+        run: ./gradlew :app:recordPaparazziDebug -PscreenshotSdk=35 --no-daemon
 
       - name: Upload screenshots
         if: always()

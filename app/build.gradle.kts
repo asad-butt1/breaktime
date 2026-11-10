@@ -7,7 +7,8 @@ plugins {
 
 android {
     namespace = "com.asad.breaktime"
-    compileSdk = 36
+    // Paparazzi (store screenshots) can only render up to API 35, so its CI job passes -PscreenshotSdk=35.
+    compileSdk = (findProperty("screenshotSdk") as String?)?.toInt() ?: 36
 
     defaultConfig {
         applicationId = "com.asad.breaktime"
