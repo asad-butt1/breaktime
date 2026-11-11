@@ -14,8 +14,8 @@ android {
         applicationId = "com.asad.breaktime"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.8.1"
+        versionCode = 10
+        versionName = "0.8.2"
 
         // AdMob. The App ID is always the real BreakTime one (it only identifies the app).
         // The ad unit is Google's TEST unit unless USE_REAL_ADS is true, so testers never
@@ -42,7 +42,10 @@ android {
     buildTypes {
         release {
             if (keystorePath != null) signingConfig = signingConfigs.getByName("release")
-            isMinifyEnabled = false
+            // R8 shrinks and obfuscates the release build (Google Play asks for this).
+            // The mapping file is packed into the .aab, so Play can still read crash reports.
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -70,6 +73,8 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("com.android.billingclient:billing:8.0.0")
+    // The ads SDK pulls in an old androidx.fragment (1.1.0) that Play flags as outdated.
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.google.android.ump:user-messaging-platform:3.1.0")
     debugImplementation("androidx.compose.ui:ui-tooling")
