@@ -264,8 +264,9 @@ fun HomeContent(
                 minutes = minutes,
                 onMinutesChange = onMinutesChange,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
+                diameter = 210.dp,
             )
-            Spacer(Modifier.height(20.dp))
+            Spacer(Modifier.height(16.dp))
 
             val chips = PRESETS.map { it to formatDuration(it) }
             val rows = (chips + (-1 to "Custom")).chunked(3)
@@ -286,23 +287,26 @@ fun HomeContent(
                     }
                 }
             }
-            Spacer(Modifier.height(16.dp))
-            StrictModeRow(
-                strict = strict,
-                isPremium = isPremium,
-                onChange = { if (isPremium) onStrictChange(it) else onPremium() },
-            )
-            Spacer(Modifier.height(10.dp))
-            SettingLinkRow(
-                title = "Scheduled breaks",
-                subtitle = when {
-                    !isPremium -> "Premium: lock apps automatically every day"
-                    scheduleSummary != null -> scheduleSummary
-                    else -> "Lock apps automatically at set times"
-                },
-                isPremium = isPremium,
-                onClick = if (isPremium) onSchedules else onPremium,
-            )
+            Spacer(Modifier.height(14.dp))
+            // Side by side so both fit on screen without scrolling.
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                StrictModeTile(
+                    strict = strict,
+                    isPremium = isPremium,
+                    onChange = { if (isPremium) onStrictChange(it) else onPremium() },
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+                ScheduleTile(
+                    subtitle = when {
+                        !isPremium -> "Lock apps at set times"
+                        scheduleSummary != null -> scheduleSummary
+                        else -> "Lock apps at set times"
+                    },
+                    isPremium = isPremium,
+                    onClick = if (isPremium) onSchedules else onPremium,
+                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                )
+            }
             Spacer(Modifier.height(20.dp))
         }
 
@@ -589,55 +593,58 @@ fun Context.findActivity(): Activity? {
     return null
 }
 
-/** Premium toggle: when on, breaks can't be ended early. Free users see it locked and are sent to Premium. */
 @Composable
-private fun StrictModeRow(strict: Boolean, isPremium: Boolean, onChange: (Boolean) -> Unit) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .hairline()
-            .clickable { onChange(!strict) }
-            .padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("Strict mode", style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
-                if (!isPremium) {
-                    Spacer(Modifier.width(6.dp))
-                    Icon(Icons.Rounded.AutoAwesome, null, tint = Palette.Forest, modifier = Modifier.size(13.dp))
-                }
-            }
-            Text(
-                if (isPremium) "Breaks can't be ended early" else "Premium: breaks can't be ended early",
-                style = MaterialTheme.typography.bodySmall,
-                color = Palette.Muted,
-            )
+private fun TileTitle(title: String, isPremium: Boolean) {
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(title, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine, maxLines = 1)
+        if (!isPremium) {
+            Spacer(Modifier.width(4.dp))
+            Icon(Icons.Rounded.AutoAwesome, null, tint = Palette.Forest, modifier = Modifier.size(12.dp))
         }
-        BrandSwitch(isPremium && strict) { onChange(it) }
     }
 }
 
-/** Tappable settings row with a chevron, matching [StrictModeRow]. */
+/** Premium toggle: when on, breaks can't be ended early. Free users are sent to Premium. */
 @Composable
-private fun SettingLinkRow(title: String, subtitle: String, isPremium: Boolean, onClick: () -> Unit) {
+private fun StrictModeTile(strict: Boolean, isPremium: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Row(
-        Modifier
-            .fillMaxWidth()
+        modifier
             .hairline()
-            .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
+            .clickable { onChange(!strict) }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(title, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
-                if (!isPremium) {
-                    Spacer(Modifier.width(6.dp))
-                    Icon(Icons.Rounded.AutoAwesome, null, tint = Palette.Forest, modifier = Modifier.size(13.dp))
-                }
-            }
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
+            TileTitle("Strict mode", isPremium)
+            Text("Can't end early", style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 2)
+        }
+        // A small On/Off label instead of a full switch, so the tile fits half the screen width.
+        val on = isPremium && strict
+        Text(
+            if (on) "On" else "Off",
+            style = MaterialTheme.typography.labelMedium,
+            color = if (on) Palette.Card else Palette.DeepPine,
+            modifier = Modifier
+                .clip(CircleShape)
+                .background(if (on) Palette.Forest else Palette.SoftSage)
+                .padding(horizontal = 10.dp, vertical = 4.dp),
+        )
+    }
+}
+
+/** Opens the scheduled breaks screen (Premium). */
+@Composable
+private fun ScheduleTile(subtitle: String, isPremium: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+    Row(
+        modifier
+            .hairline()
+            .clickable(onClick = onClick)
+            .padding(start = 12.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(Modifier.weight(1f)) {
+            TileTitle("Schedules", isPremium)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 2)
         }
         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = Palette.Muted)
     }
