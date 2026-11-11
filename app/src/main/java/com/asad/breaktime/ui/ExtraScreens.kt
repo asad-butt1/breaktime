@@ -196,21 +196,28 @@ fun PremiumContent(
                     }
                 }
             }
-            Spacer(Modifier.height(20.dp))
             if (isPremium) {
+                Spacer(Modifier.height(20.dp))
                 Pill("You're on Premium. Thank you!", icon = Icons.Rounded.Check, container = Palette.SoftSage, content = Palette.Forest)
-            } else {
-                PlanOption("Yearly", "${prices?.yearly ?: "$19.99"} / year", bestValue = true, selected = yearly) { yearly = true }
-                Spacer(Modifier.height(10.dp))
-                PlanOption("Monthly", "${prices?.monthly ?: "$2.99"} / month", bestValue = false, selected = !yearly) { yearly = false }
-                Spacer(Modifier.height(10.dp))
-                Text(
-                    "Renews automatically. Cancel anytime in Google Play.",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = Palette.Muted,
-                )
             }
             Spacer(Modifier.height(16.dp))
+        }
+        // Plans sit outside the scrolling area so both are always visible next to the button.
+        if (!isPremium) {
+            Spacer(Modifier.height(8.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                PlanTile("Yearly", prices?.yearly ?: "$19.99", "/ year", bestValue = true, selected = yearly, modifier = Modifier.weight(1f)) { yearly = true }
+                PlanTile("Monthly", prices?.monthly ?: "$2.99", "/ month", bestValue = false, selected = !yearly, modifier = Modifier.weight(1f)) { yearly = false }
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(
+                "Renews automatically. Cancel anytime in Google Play.",
+                style = MaterialTheme.typography.bodySmall,
+                color = Palette.Muted,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Spacer(Modifier.height(10.dp))
         }
         val trialDays = if (yearly) prices?.yearlyTrialDays ?: 0 else prices?.monthlyTrialDays ?: 0
         if (isPremium) {
@@ -218,12 +225,14 @@ fun PremiumContent(
         } else {
             PrimaryButton(if (trialDays > 0) "Start $trialDays-day free trial" else "Get Premium", { onStartTrial(yearly) })
         }
-        TextButton(onClick = onRestore, modifier = Modifier.fillMaxWidth()) {
-            Text("Restore purchase", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
-        }
-        if (onRedeemCode != null && !isPremium) {
-            TextButton(onClick = { showCode = true }, modifier = Modifier.fillMaxWidth()) {
-                Text("Have a code?", style = MaterialTheme.typography.labelMedium, color = Palette.Muted)
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+            TextButton(onClick = onRestore) {
+                Text("Restore purchase", style = MaterialTheme.typography.labelLarge, color = Palette.DeepPine)
+            }
+            if (onRedeemCode != null && !isPremium) {
+                TextButton(onClick = { showCode = true }) {
+                    Text("Have a code?", style = MaterialTheme.typography.labelMedium, color = Palette.Muted)
+                }
             }
         }
         if (showCode && onRedeemCode != null) {
@@ -239,35 +248,46 @@ fun PremiumContent(
 }
 
 @Composable
-private fun PlanOption(name: String, price: String, bestValue: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun PlanTile(
+    name: String,
+    price: String,
+    period: String,
+    bestValue: Boolean,
+    selected: Boolean,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     val shape = RoundedCornerShape(16.dp)
-    Row(
-        Modifier
-            .fillMaxWidth()
+    Column(
+        modifier
             .clip(shape)
             .background(if (selected) Palette.SoftSage.copy(alpha = 0.5f) else Palette.Card)
             .border(if (selected) 1.5.dp else 1.dp, if (selected) Palette.Forest else Palette.Line, shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(horizontal = 12.dp, vertical = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Box(
-            Modifier
-                .size(18.dp)
-                .clip(CircleShape)
-                .border(1.5.dp, if (selected) Palette.Forest else Palette.SageDeep, CircleShape),
-            contentAlignment = Alignment.Center,
-        ) {
-            if (selected) Box(Modifier.size(9.dp).clip(CircleShape).background(Palette.Forest))
-        }
-        Spacer(Modifier.width(10.dp))
-        Text(name, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
-        if (bestValue) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                Modifier
+                    .size(18.dp)
+                    .clip(CircleShape)
+                    .border(1.5.dp, if (selected) Palette.Forest else Palette.SageDeep, CircleShape),
+                contentAlignment = Alignment.Center,
+            ) {
+                if (selected) Box(Modifier.size(9.dp).clip(CircleShape).background(Palette.Forest))
+            }
             Spacer(Modifier.width(8.dp))
-            Pill("BEST VALUE", container = Palette.Sunlight, content = Palette.DeepPine)
+            Text(name, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
         }
-        Spacer(Modifier.weight(1f))
-        Text(price, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
+        Text(price, style = MaterialTheme.typography.titleLarge, color = Palette.DeepPine)
+        Text(period, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
+        if (bestValue) {
+            Pill("BEST VALUE", container = Palette.Sunlight, content = Palette.DeepPine)
+        } else {
+            // Keeps both tiles the same height.
+            Pill(" ", container = Color.Transparent, content = Color.Transparent)
+        }
     }
 }
 
