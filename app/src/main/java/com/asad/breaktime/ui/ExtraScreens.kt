@@ -205,9 +205,10 @@ fun PremiumContent(
         // Plans sit outside the scrolling area so both are always visible next to the button.
         if (!isPremium) {
             Spacer(Modifier.height(8.dp))
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                PlanTile("Yearly", prices?.yearly ?: "$19.99", "/ year", bestValue = true, selected = yearly, modifier = Modifier.weight(1f)) { yearly = true }
-                PlanTile("Monthly", prices?.monthly ?: "$2.99", "/ month", bestValue = false, selected = !yearly, modifier = Modifier.weight(1f)) { yearly = false }
+            // Full-width rows so long local prices (e.g. "Rs 5,600.00") never get squeezed.
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                PlanTile("Yearly", prices?.yearly ?: "$19.99", "/ year", bestValue = true, selected = yearly, modifier = Modifier.fillMaxWidth()) { yearly = true }
+                PlanTile("Monthly", prices?.monthly ?: "$2.99", "/ month", bestValue = false, selected = !yearly, modifier = Modifier.fillMaxWidth()) { yearly = false }
             }
             Spacer(Modifier.height(8.dp))
             Text(
@@ -258,35 +259,36 @@ private fun PlanTile(
     onClick: () -> Unit,
 ) {
     val shape = RoundedCornerShape(16.dp)
-    Column(
+    Row(
         modifier
             .clip(shape)
             .background(if (selected) Palette.SoftSage.copy(alpha = 0.5f) else Palette.Card)
             .border(if (selected) 1.5.dp else 1.dp, if (selected) Palette.Forest else Palette.Line, shape)
             .clickable(onClick = onClick)
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp),
+            .padding(horizontal = 14.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier
-                    .size(18.dp)
-                    .clip(CircleShape)
-                    .border(1.5.dp, if (selected) Palette.Forest else Palette.SageDeep, CircleShape),
-                contentAlignment = Alignment.Center,
-            ) {
-                if (selected) Box(Modifier.size(9.dp).clip(CircleShape).background(Palette.Forest))
-            }
-            Spacer(Modifier.width(8.dp))
-            Text(name, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
+        Box(
+            Modifier
+                .size(20.dp)
+                .clip(CircleShape)
+                .border(1.5.dp, if (selected) Palette.Forest else Palette.SageDeep, CircleShape),
+            contentAlignment = Alignment.Center,
+        ) {
+            if (selected) Box(Modifier.size(10.dp).clip(CircleShape).background(Palette.Forest))
         }
-        Text(price, style = MaterialTheme.typography.titleLarge, color = Palette.DeepPine)
-        Text(period, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
-        if (bestValue) {
-            Pill("BEST VALUE", container = Palette.Sunlight, content = Palette.DeepPine)
-        } else {
-            // Keeps both tiles the same height.
-            Pill(" ", container = Color.Transparent, content = Color.Transparent)
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f)) {
+            Text(name, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine, maxLines = 1)
+            if (bestValue) {
+                Spacer(Modifier.height(4.dp))
+                Pill("BEST VALUE", container = Palette.Sunlight, content = Palette.DeepPine)
+            }
+        }
+        Spacer(Modifier.width(8.dp))
+        Column(horizontalAlignment = Alignment.End) {
+            Text(price, style = MaterialTheme.typography.titleMedium, color = Palette.DeepPine, maxLines = 1, softWrap = false)
+            Text(period, style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 1)
         }
     }
 }

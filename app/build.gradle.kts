@@ -14,8 +14,8 @@ android {
         applicationId = "com.asad.breaktime"
         minSdk = 26
         targetSdk = 36
-        versionCode = 10
-        versionName = "0.8.2"
+        versionCode = 11
+        versionName = "0.8.3"
 
         // AdMob. The App ID is always the real BreakTime one (it only identifies the app).
         // The ad unit is Google's TEST unit unless USE_REAL_ADS is true, so testers never

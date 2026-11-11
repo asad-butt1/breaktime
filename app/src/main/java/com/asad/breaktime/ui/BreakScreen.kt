@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -264,7 +265,7 @@ fun HomeContent(
                 minutes = minutes,
                 onMinutesChange = onMinutesChange,
                 modifier = Modifier.align(Alignment.CenterHorizontally),
-                diameter = 210.dp,
+                diameter = 190.dp,
             )
             Spacer(Modifier.height(16.dp))
 
@@ -288,14 +289,15 @@ fun HomeContent(
                 }
             }
             Spacer(Modifier.height(14.dp))
-            // Side by side so both fit on screen without scrolling.
-            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            // One card, two compact full-width rows: roomy on narrow phones and with large text.
+            Column(Modifier.fillMaxWidth().hairline()) {
                 StrictModeTile(
                     strict = strict,
                     isPremium = isPremium,
                     onChange = { if (isPremium) onStrictChange(it) else onPremium() },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
+                Box(Modifier.fillMaxWidth().padding(horizontal = 14.dp).height(1.dp).background(Palette.Line))
                 ScheduleTile(
                     subtitle = when {
                         !isPremium -> "Lock apps at set times"
@@ -304,7 +306,7 @@ fun HomeContent(
                     },
                     isPremium = isPremium,
                     onClick = if (isPremium) onSchedules else onPremium,
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
             Spacer(Modifier.height(20.dp))
@@ -609,14 +611,13 @@ private fun TileTitle(title: String, isPremium: Boolean) {
 private fun StrictModeTile(strict: Boolean, isPremium: Boolean, onChange: (Boolean) -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
-            .hairline()
             .clickable { onChange(!strict) }
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 14.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             TileTitle("Strict mode", isPremium)
-            Text("Can't end early", style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 2)
+            Text("Breaks can't be ended early", style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         // A small On/Off label instead of a full switch, so the tile fits half the screen width.
         val on = isPremium && strict
@@ -637,14 +638,13 @@ private fun StrictModeTile(strict: Boolean, isPremium: Boolean, onChange: (Boole
 private fun ScheduleTile(subtitle: String, isPremium: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(
         modifier
-            .hairline()
             .clickable(onClick = onClick)
-            .padding(start = 12.dp, end = 6.dp, top = 10.dp, bottom = 10.dp),
+            .padding(start = 14.dp, end = 8.dp, top = 9.dp, bottom = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
             TileTitle("Schedules", isPremium)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 2)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = Palette.Muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Icon(Icons.AutoMirrored.Rounded.KeyboardArrowRight, null, tint = Palette.Muted)
     }
