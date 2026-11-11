@@ -295,15 +295,16 @@ fun SetupContent(
     Spacer(Modifier.height(12.dp))
 
     val steps = if (restricted) {
-        listOf(
+        listOf<Triple<String, String, Pair<String, () -> Unit>?>>(
             Triple("Find BreakTime", "Open Accessibility → Installed apps → BreakTime app lock. If it says \"Restricted setting\", tap OK.", "Open Accessibility" to onOpenAccessibility),
             Triple("Allow access if Android blocks it", "In App info, tap ⋮ at the top, then Allow restricted settings.", "Open app info" to onOpenAppInfo),
             Triple("Turn on the app lock", "Go back to Accessibility and switch on BreakTime app lock.", "Open Accessibility" to onOpenAccessibility),
         )
     } else {
-        listOf(
-            Triple("Find BreakTime", "Open Accessibility → Installed apps → BreakTime app lock.", "Open Accessibility" to onOpenAccessibility),
-            Triple("Turn on the app lock", "Switch it on, then tap Allow.", "Open Accessibility" to onOpenAccessibility),
+        // Both steps happen on the same Settings screen, so only the first one gets a button.
+        listOf<Triple<String, String, Pair<String, () -> Unit>?>>(
+            Triple("Find BreakTime", "Tap the button below, then Installed apps → BreakTime app lock.", "Open Accessibility" to onOpenAccessibility),
+            Triple("Turn on the app lock", "Switch it on, then tap Allow. BreakTime opens again by itself.", null),
         )
     }
 
@@ -321,8 +322,10 @@ fun SetupContent(
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(title, style = MaterialTheme.typography.titleSmall, color = Palette.DeepPine)
                         Text(body, style = MaterialTheme.typography.bodySmall, color = Palette.Muted)
-                        Spacer(Modifier.height(4.dp))
-                        LinkPill(action.first, action.second)
+                        if (action != null) {
+                            Spacer(Modifier.height(4.dp))
+                            LinkPill(action.first, action.second)
+                        }
                     }
                 }
             }
