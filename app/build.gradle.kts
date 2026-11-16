@@ -26,7 +26,7 @@ android {
         buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$adUnit\"")
 
         // PostHog project key (public by design, it only lets the app send events). Empty = analytics off.
-        buildConfigField("String", "POSTHOG_KEY", "\"\"")
+        buildConfigField("String", "POSTHOG_KEY", "\"phc_tPToDreN8eg95LJGmvz3oKd9UoXmqn4koQ2bwHAQpV9S\"")
     }
 
     // Release signing comes from environment variables (set as GitHub secrets in CI).
