@@ -1,7 +1,7 @@
 # BreakTime Privacy Policy
-_Last updated: 9 November 2026 (version 0.8: ads and Premium)_
+_Last updated: 16 November 2026 (version 0.8.4: anonymous usage analytics)_
 
-> **In short:** BreakTime works on your phone. We don't run any servers and don't collect your personal data. The free version shows one ad when you start a break; that ad is provided by Google AdMob, which uses a device advertising ID. Premium has no ads.
+> **In short:** BreakTime works on your phone. We don't run any servers and don't collect your personal data. We count anonymous app steps (like "started a break") to improve the app. The free version shows one ad when you start a break; that ad is provided by Google AdMob, which uses a device advertising ID. Premium has no ads.
 
 ## Who we are
 BreakTime is an Android app that helps you take breaks from distracting apps. It is developed by Asad (“we”, “us”).
@@ -16,7 +16,9 @@ BreakTime is an Android app that helps you take breaks from distracting apps. It
 BreakTime saves the apps you chose to lock, your current break and your break history (dates, lengths and whether each break was completed) so it can show your streak and progress. This information is stored only on your phone. Uninstalling the app or clearing its data deletes it.
 
 ## Data we collect
-We (the developer) collect nothing. BreakTime has no account, no analytics and no servers of its own. Your locked apps, schedules and break history never leave your phone.
+BreakTime has no account and no servers of its own. Your locked apps, schedules and break history never leave your phone.
+
+**Anonymous usage analytics.** To find out where people get stuck (for example during setup), the app sends anonymous usage events to **PostHog**, an analytics service that processes them on our behalf. An event is a step name such as "setup opened", "break started", "break completed" or "Premium screen viewed", sometimes with a simple number like the break length. Each event comes with a random ID created for this install, the app version, your phone model and Android version. We never send your name, email, which apps you lock or open, what is on your screen, or anything you type, and we don't record the screen. Your IP address is not stored. This data is used only to improve BreakTime, is never sold, and is not used for advertising. The Accessibility Service never sends anything.
 
 ## Advertising (free version)
 The free version shows one full-screen ad after you tap "Start break". Ads are never shown on the break screen. Ads are provided by **Google AdMob**. To show and measure ads, the Google Mobile Ads SDK collects and shares with Google:
