@@ -1,5 +1,7 @@
 package com.asad.breaktime.ui
 
+import com.asad.breaktime.data.Analytics
+
 import android.widget.Toast
 import android.os.Bundle
 import android.content.ComponentName
@@ -68,10 +70,14 @@ private const val PAGES = 3
 
 /** First run: Welcome → How it works → Set up app lock. */
 @Composable
-fun OnboardingScreen(onFinish: () -> Unit) {
+fun OnboardingScreen(onFinish: (lockOn: Boolean) -> Unit) {
     var page by rememberSaveable { mutableIntStateOf(0) }
     BackHandler(enabled = page > 0) { page-- }
     val setup = rememberSetupState()
+    val context = LocalContext.current
+    LaunchedEffect(page) {
+        Analytics.screen(context, listOf("welcome", "how_it_works", "setup")[page.coerceAtMost(2)])
+    }
 
     when (page) {
         0 -> WelcomePage(onNext = { page = 1 }, onSkip = { page = 2 })
@@ -82,8 +88,8 @@ fun OnboardingScreen(onFinish: () -> Unit) {
             onOpenAccessibility = setup.openAccessibility,
             onOpenAppInfo = setup.openAppInfo,
             onBack = { page = 1 },
-            onDone = onFinish,
-            onLater = onFinish,
+            onDone = { onFinish(setup.lockOn) },
+            onLater = { onFinish(setup.lockOn) },
             consented = setup.consented,
             onConsent = setup.consent,
         )
@@ -434,7 +440,9 @@ fun rememberSetupState(): SetupState {
     var lockOn by remember { mutableStateOf(BlockerService.isEnabled(context)) }
     LaunchedEffect(Unit) {
         while (true) {
-            lockOn = BlockerService.isEnabled(context)
+            val now = BlockerService.isEnabled(context)
+            if (now && !lockOn) Analytics.track(context, "setup_lock_turned_on")
+            lockOn = now
             delay(1000)
         }
     }
@@ -446,10 +454,12 @@ fun rememberSetupState(): SetupState {
         restricted = restricted,
         consented = consented,
         consent = {
+            Analytics.track(context, "setup_consent_given")
             store.accessibilityConsent = true
             consented = true
         },
         openAccessibility = {
+            Analytics.track(context, "setup_open_accessibility")
             store.awaitingLockSetupAt = System.currentTimeMillis()
             // The ":settings:" extras make many phones (Pixel, Samsung, ...) scroll to and highlight
             // BreakTime in the list. Phones that don't support them just open the normal list.

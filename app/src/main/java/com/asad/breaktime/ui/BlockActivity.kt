@@ -1,5 +1,7 @@
 package com.asad.breaktime.ui
 
+import com.asad.breaktime.data.Analytics
+
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -56,6 +58,7 @@ class BlockActivity : ComponentActivity() {
         })
 
         val store = BreakStore.get(this)
+        Analytics.track(this, "app_blocked") // Which app is never sent.
         val pkg = intent.getStringExtra(EXTRA_PACKAGE)
         val info = pkg?.let { runCatching { packageManager.getApplicationInfo(it, 0) }.getOrNull() }
         val appName = info?.let { packageManager.getApplicationLabel(it).toString() }

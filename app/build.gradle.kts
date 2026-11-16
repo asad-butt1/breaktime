@@ -14,8 +14,8 @@ android {
         applicationId = "com.asad.breaktime"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.8.3"
+        versionCode = 12
+        versionName = "0.8.4"
 
         // AdMob. The App ID is always the real BreakTime one (it only identifies the app).
         // The ad unit is Google's TEST unit unless USE_REAL_ADS is true, so testers never
@@ -24,6 +24,9 @@ android {
         val useRealAds = false
         val adUnit = if (useRealAds) "ca-app-pub-3984378567292938/5077403488" else "ca-app-pub-3940256099942544/1033173712"
         buildConfigField("String", "ADMOB_INTERSTITIAL_ID", "\"$adUnit\"")
+
+        // PostHog project key (public by design, it only lets the app send events). Empty = analytics off.
+        buildConfigField("String", "POSTHOG_KEY", "\"\"")
     }
 
     // Release signing comes from environment variables (set as GitHub secrets in CI).
@@ -77,6 +80,7 @@ dependencies {
     implementation("androidx.fragment:fragment-ktx:1.8.5")
     implementation("com.google.android.gms:play-services-ads:23.6.0")
     implementation("com.google.android.ump:user-messaging-platform:3.1.0")
+    implementation("com.posthog:posthog-android:3.77.1")
     debugImplementation("androidx.compose.ui:ui-tooling")
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20240303")

@@ -40,6 +40,7 @@ object Billing {
 
     private var client: BillingClient? = null
     private var store: BreakStore? = null
+    private var appContext: Context? = null
     private var details: ProductDetails? = null
 
     private val _prices = MutableStateFlow<PremiumPrices?>(null)
@@ -48,6 +49,7 @@ object Billing {
     /** Connects to Google Play and refreshes whether the user is Premium. Safe to call often. */
     fun refresh(context: Context) {
         val app = context.applicationContext
+        appContext = app
         if (store == null) store = BreakStore.get(app)
         val c = client ?: BillingClient.newBuilder(app)
             .setListener { result, purchases -> onPurchases(result, purchases) }
@@ -165,7 +167,10 @@ object Billing {
 
     private fun onPurchases(result: BillingResult, purchases: List<Purchase>?) {
         if (result.responseCode == BillingResponseCode.OK && purchases != null) {
-            if (handle(purchases)) store?.isPremium = true
+            if (handle(purchases)) {
+                if (store?.isPremium != true) appContext?.let { Analytics.track(it, "purchase_completed") }
+                store?.isPremium = true
+            }
         }
     }
 

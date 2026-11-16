@@ -22,6 +22,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import com.asad.breaktime.data.Ads
+import com.asad.breaktime.data.Analytics
+import androidx.compose.runtime.LaunchedEffect
 import com.asad.breaktime.data.Billing
 import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.service.BreakScheduler
@@ -37,12 +39,14 @@ class MainActivity : ComponentActivity() {
             navigationBarStyle = SystemBarStyle.light(Palette.Parchment.toArgb(), Palette.DeepPine.toArgb()),
         )
         Ads.init(this)
+        Analytics.init(this)
         setContent {
             BreakTimeTheme {
                 val store = remember { BreakStore.get(this) }
                 var onboarded by remember { mutableStateOf(store.onboardingDone) }
                 if (!onboarded) {
-                    OnboardingScreen(onFinish = {
+                    OnboardingScreen(onFinish = { lockOn ->
+                        Analytics.track(this, "onboarding_finished", mapOf("lock_on" to lockOn))
                         store.onboardingDone = true
                         onboarded = true
                     })
@@ -70,6 +74,13 @@ private fun MainApp(store: BreakStore) {
     val celebrate = remember(version) { store.pendingCelebration }
 
     BackHandler(enabled = overlay != Overlay.None) { overlay = Overlay.None }
+
+    val screenName = when {
+        celebrate > 0 -> "break_complete"
+        overlay != Overlay.None -> overlay.name.lowercase()
+        else -> tab.name.lowercase()
+    }
+    LaunchedEffect(screenName) { Analytics.screen(context, screenName) }
 
     when {
         celebrate > 0 -> {
@@ -106,6 +117,7 @@ private fun MainApp(store: BreakStore) {
             PremiumContent(
                 onClose = { overlay = Overlay.None },
                 onStartTrial = { yearly ->
+                    Analytics.track(context, "purchase_started", mapOf("plan" to if (yearly) "yearly" else "monthly"))
                     val activity = context.findActivity()
                     if (activity == null || !Billing.buy(activity, yearly)) {
                         Billing.refresh(context)

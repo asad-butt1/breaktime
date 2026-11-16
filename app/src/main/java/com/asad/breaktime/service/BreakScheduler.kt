@@ -12,6 +12,7 @@ import android.app.Notification
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import com.asad.breaktime.R
+import com.asad.breaktime.data.Analytics
 import com.asad.breaktime.data.BreakStore
 import com.asad.breaktime.ui.MainActivity
 
@@ -26,6 +27,7 @@ object BreakScheduler {
     fun startBreak(context: Context, minutes: Int) {
         val store = BreakStore.get(context)
         store.startBreak(minutes)
+        Analytics.track(context, "break_started", mapOf("minutes" to minutes, "strict" to store.breakIsStrict, "scheduled" to false))
         scheduleEndAlarm(context, store.breakEndsAt)
         showOngoing(context, store.breakEndsAt)
     }
@@ -34,6 +36,7 @@ object BreakScheduler {
         val store = BreakStore.get(context)
         if (store.breakIsStrict) return // Strict mode: no way out until the timer ends.
         store.endEarly()
+        Analytics.track(context, "break_ended_early")
         cancelEndAlarm(context)
         NotificationManagerCompat.from(context).cancel(NOTIF_ONGOING)
     }
@@ -41,6 +44,7 @@ object BreakScheduler {
     /** Call whenever the break might be over. Shows the "apps unlocked" notification once. */
     fun finishIfDue(context: Context) {
         if (BreakStore.get(context).finishIfDue()) {
+            Analytics.track(context, "break_completed")
             NotificationManagerCompat.from(context).cancel(NOTIF_ONGOING)
             notify(
                 context, NOTIF_DONE,
@@ -70,6 +74,7 @@ object BreakScheduler {
             if (window != null && window.key != store.lastAutoStart && window.end - now > 60_000L) {
                 store.lastAutoStart = window.key
                 store.startBreakUntil(window.end, now)
+                Analytics.track(context, "break_started", mapOf("scheduled" to true))
                 scheduleEndAlarm(context, store.breakEndsAt)
                 showOngoing(context, store.breakEndsAt, "Scheduled break started")
             }
